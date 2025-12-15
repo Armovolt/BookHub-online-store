@@ -10,6 +10,9 @@
         <a href="{{ url_for('admin_add_book') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
             <i class="fas fa-plus mr-2"></i>Додати книгу
         </a>
+        <div class="text-sm text-gray-600">
+            <i class="fas fa-info-circle mr-1"></i>Всього книг: {{ books|length }}
+        </div>
     </div>
 
     <div class="bg-white rounded-xl shadow-lg p-6">
@@ -18,21 +21,30 @@
             <table class="min-w-full">
                 <thead>
                     <tr class="bg-amber-100">
+                        <th class="p-3 text-left">ID</th>
                         <th class="p-3 text-left">Назва</th>
                         <th class="p-3 text-left">Автор</th>
                         <th class="p-3 text-left">Категорія</th>
                         <th class="p-3 text-left">Ціна</th>
                         <th class="p-3 text-left">На складі</th>
                         <th class="p-3 text-left">Статус</th>
+                        <th class="p-3 text-left">Дії</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for book in books %}
-                    <tr class="border-b border-amber-200">
+                    <tr class="border-b border-amber-200 hover:bg-amber-50" id="book-row-{{ book.id }}">
+                        <td class="p-3 text-gray-500">#{{ book.id }}</td>
                         <td class="p-3 font-semibold">{{ book.title }}</td>
                         <td class="p-3">{{ book.author }}</td>
-                        <td class="p-3">{{ book.category }}</td>
-                        <td class="p-3">{{ book.price }} ₴</td>
+                        <td class="p-3">
+                            {% if book.category %}
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-sm">{{ book.category }}</span>
+                            {% else %}
+                            <span class="text-gray-500">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="p-3 font-bold text-amber-700">{{ book.price }} ₴</td>
                         <td class="p-3">{{ book.stock_quantity }}</td>
                         <td class="p-3">
                             {% if book.in_stock %}
@@ -41,14 +53,222 @@
                             <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-sm">Немає</span>
                             {% endif %}
                         </td>
+                        <td class="p-3">
+                            <div class="flex space-x-2">
+                                <a href="{{ url_for('admin_edit_book', book_id=book.id) }}" 
+                                   class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 text-sm">
+                                    <i class="fas fa-edit mr-1"></i>Редагувати
+                                </a>
+                                <button onclick="showDeleteModal({{ book.id }}, `{{ book.title.replace("'", "\\'") }}`)" 
+                                        class="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 text-sm">
+                                    <i class="fas fa-trash mr-1"></i>Видалити
+                                </button>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <p class="text-gray-500 text-center py-8">Книг поки немає</p>
+        <div class="text-center py-8">
+            <i class="fas fa-book text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Книг поки немає</p>
+            <p class="text-gray-400 text-sm mt-2">Додайте першу книгу за допомогою кнопки вище</p>
+        </div>
         {% endif %}
     </div>
 </div>
+
+<!-- Модальне вікно для видалення книги -->
+<div id="deleteBookModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50" 
+     data-book-id="" data-book-title="">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-xl font-bold text-amber-800 mb-4" id="modalTitle">Видалити книгу</h3>
+        <p class="text-gray-700 mb-4">Що робити з відгуками на цю книгу?</p>
+        <div class="mb-4">
+            <label class="flex items-center mb-2">
+                <input type="radio" name="deleteOption" value="keep" checked class="mr-2">
+                <span class="flex-1">
+                    <span class="font-medium">Залишити відгуки</span><br>
+                    <span class="text-sm text-gray-600">Відгуки залишаться в системі з написом "Книга більше не доступна"</span>
+                </span>
+            </label>
+            <label class="flex items-center">
+                <input type="radio" name="deleteOption" value="delete" class="mr-2">
+                <span class="flex-1">
+                    <span class="font-medium">Видалити відгуки</span><br>
+                    <span class="text-sm text-gray-600">Всі відгуки на цю книгу будуть повністю видалені</span>
+                </span>
+            </label>
+        </div>
+        <div class="flex justify-end space-x-4">
+            <button onclick="closeDeleteModal()" class="px-4 py-2 text-gray-600 hover:text-gray-800">Скасувати</button>
+            <button onclick="confirmDeleteBook()" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Видалити</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Зберігаємо дані книги в об'єкті window для глобального доступу
+window.currentBookData = {
+    id: null,
+    title: null
+};
+
+// Функція для показу модального вікна видалення
+function showDeleteModal(bookId, bookTitle) {
+    console.log("Showing delete modal for book:", bookId, bookTitle);
+    
+    if (!bookId || bookId === 'null' || bookId === null) {
+        BookHub.showNotification('Помилка: ID книги не встановлено', 'error');
+        return;
+    }
+    
+    // Зберігаємо дані у глобальному об'єкті та в атрибутах модального вікна
+    window.currentBookData.id = bookId;
+    window.currentBookData.title = bookTitle;
+    
+    document.getElementById('deleteBookModal').setAttribute('data-book-id', bookId);
+    document.getElementById('deleteBookModal').setAttribute('data-book-title', bookTitle);
+    
+    // Оновлюємо заголовок модального вікна
+    document.getElementById('modalTitle').textContent = `Видалити книгу "${bookTitle}"`;
+    
+    // Показуємо модальне вікно
+    document.getElementById('deleteBookModal').classList.remove('hidden');
+    document.getElementById('deleteBookModal').classList.add('flex');
+}
+
+// Функція для закриття модального вікна
+function closeDeleteModal() {
+    document.getElementById('deleteBookModal').classList.add('hidden');
+    document.getElementById('deleteBookModal').classList.remove('flex');
+    window.currentBookData.id = null;
+    window.currentBookData.title = null;
+}
+
+// Функція для підтвердження видалення книги
+async function confirmDeleteBook() {
+    console.log("Confirm delete called. Current book data:", window.currentBookData);
+    
+    // Отримуємо дані з атрибутів модального вікна як запасний варіант
+    const modal = document.getElementById('deleteBookModal');
+    const bookId = window.currentBookData.id || modal.getAttribute('data-book-id');
+    const bookTitle = window.currentBookData.title || modal.getAttribute('data-book-title');
+    
+    console.log("Book ID from modal:", bookId, "Title:", bookTitle);
+    
+    if (!bookId || bookId === 'null' || bookId === null) {
+        BookHub.showNotification('Помилка: ID книги не встановлено', 'error');
+        closeDeleteModal();
+        return;
+    }
+    
+    const deleteOption = document.querySelector('input[name="deleteOption"]:checked').value;
+    const deleteReviews = deleteOption === 'delete';
+    
+    // Закриваємо модальне вікно
+    closeDeleteModal();
+    
+    try {
+        // Показуємо індикатор завантаження
+        BookHub.showNotification('Видаляємо книгу...', 'info');
+        
+        // Перевіряємо, чи ID є числом
+        const bookIdNum = parseInt(bookId);
+        if (isNaN(bookIdNum) || bookIdNum <= 0) {
+            throw new Error('Невірний ID книги: ' + bookId);
+        }
+        
+        console.log("Sending DELETE request for book ID:", bookIdNum);
+        
+        const response = await fetch(`/api/v1/books/${bookIdNum}?delete_reviews=${deleteReviews}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        console.log("Response status:", response.status);
+        
+        // Перевіряємо статус відповіді
+        if (!response.ok) {
+            if (response.status === 404) {
+                throw new Error('Книгу не знайдено (404)');
+            } else if (response.status === 403) {
+                throw new Error('Доступ заборонено (403)');
+            } else if (response.status === 400) {
+                // Спробуємо отримати деталі помилки
+                try {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Помилка при видаленні книги (400)');
+                } catch {
+                    throw new Error('Помилка при видаленні книги (400)');
+                }
+            } else {
+                throw new Error(`Помилка сервера: ${response.status} ${response.statusText}`);
+            }
+        }
+        
+        const data = await response.json();
+        console.log("Response data:", data);
+        
+        if (data.success) {
+            let message = `Книгу "${bookTitle}" успішно видалено!`;
+            if (deleteReviews && data.deleted_reviews_count > 0) {
+                message += ` Видалено ${data.deleted_reviews_count} відгуків.`;
+            } else if (!deleteReviews && data.kept_reviews_count > 0) {
+                message += ` Залишено ${data.kept_reviews_count} відгуків.`;
+            }
+            
+            BookHub.showNotification(message, 'success');
+            
+            // Видаляємо рядок з таблиці замість перезавантаження сторінки
+            const bookRow = document.getElementById(`book-row-${bookIdNum}`);
+            if (bookRow) {
+                bookRow.remove();
+            }
+            
+            // Оновлюємо лічильник книг
+            updateBookCount();
+        } else {
+            BookHub.showNotification(data.error || 'Помилка при видаленні книги', 'error');
+        }
+    } catch (error) {
+        console.error('Помилка при видаленні книги:', error);
+        
+        if (error.name === 'SyntaxError') {
+            BookHub.showNotification('Сервер повернув некоректну відповідь. Можливо, книга вже видалена.', 'error');
+        } else {
+            BookHub.showNotification(error.message || 'Помилка мережі або сервера. Спробуйте ще раз.', 'error');
+        }
+    }
+}
+
+// Функція для оновлення лічильника книг
+function updateBookCount() {
+    const bookRows = document.querySelectorAll('[id^="book-row-"]');
+    const bookCountElement = document.querySelector('.text-sm.text-gray-600 i.fa-info-circle').parentNode;
+    
+    if (bookCountElement) {
+        bookCountElement.innerHTML = `<i class="fas fa-info-circle mr-1"></i>Всього книг: ${bookRows.length}`;
+    }
+}
+
+// Закриття модального вікна при кліку на фон
+document.getElementById('deleteBookModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+
+// Закриття модального вікна при натисканні клавіші Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+</script>
 {% endblock %}

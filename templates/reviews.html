@@ -9,22 +9,30 @@
     <!-- Форма додавання відгуку -->
     <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
         <h2 class="text-2xl font-bold mb-4">Залишити відгук</h2>
-        <form method="POST" class="space-y-4">
+        
+        {% if current_user.is_authenticated %}
+        <form id="review-form" class="space-y-4">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                    <input type="text" name="name" placeholder="Ваше ім'я" required 
-                           class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    <label class="block text-gray-700 mb-2">Ваше ім'я *</label>
+                    <input type="text" id="review-name" 
+                           value="{{ current_user.username }}"
+                           readonly
+                           class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-gray-50">
                 </div>
                 <div>
-                    <input type="email" name="email" placeholder="Ваш email" 
-                           class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                    <label class="block text-gray-700 mb-2">Ваш email</label>
+                    <input type="email" id="review-email"
+                           value="{{ current_user.email }}"
+                           readonly
+                           class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 bg-gray-50">
                 </div>
             </div>
 
             <!-- Вибір книги -->
             <div class="mb-4">
                 <label class="block text-gray-700 mb-2">Оберіть книгу (необов'язково)</label>
-                <select name="book_id" class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
+                <select id="review-book" class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500">
                     <option value="">Загальний відгук про магазин</option>
                     {% for book in books %}
                     <option value="{{ book.id }}">{{ book.title }} - {{ book.author }}</option>
@@ -33,12 +41,15 @@
             </div>
 
             <div>
-                <textarea name="message" placeholder="Ваш відгук..." rows="4" required
-                          class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500"></textarea>
+                <label class="block text-gray-700 mb-2">Ваш відгук *</label>
+                <textarea id="review-message" rows="4" required
+                          class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500"
+                          placeholder="Поділіться вашими враженнями..."></textarea>
             </div>
+            
             <div class="flex items-center space-x-4">
                 <span class="text-gray-700">Оцінка:</span>
-                <select name="rating" class="p-2 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500">
+                <select id="review-rating" class="p-2 border border-amber-300 rounded focus:ring-2 focus:ring-amber-500">
                     <option value="5">★★★★★ Відмінно</option>
                     <option value="4">★★★★☆ Дуже добре</option>
                     <option value="3">★★★☆☆ Добре</option>
@@ -46,47 +57,365 @@
                     <option value="1">★☆☆☆☆ Погано</option>
                 </select>
             </div>
-            <button type="submit" class="bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition font-semibold">
+            
+            <button type="submit" id="submit-review" class="bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition font-semibold">
                 <i class="fas fa-paper-plane mr-2"></i>Надіслати відгук
             </button>
         </form>
+        {% else %}
+        <div class="text-center py-6">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 mb-4">
+                <i class="fas fa-exclamation-circle text-yellow-500 text-4xl mb-3"></i>
+                <h3 class="text-xl font-semibold text-yellow-800 mb-2">Для залишення відгуку потрібно увійти</h3>
+                <p class="text-yellow-700 mb-4">Авторизуйтесь, щоб поділитися своїми враженнями про книги.</p>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                    <a href="{{ url_for('auth.login', reason='review') }}" class="bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition">
+                        <i class="fas fa-sign-in-alt mr-2"></i>Увійти
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                        <i class="fas fa-user-plus mr-2"></i>Зареєструватися
+                    </a>
+                </div>
+            </div>
+            <p class="text-gray-600 text-sm">Вже маєте акаунт? Увійдіть, щоб залишити відгук або побачити історію своїх відгуків.</p>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Відгуки -->
-    <div class="space-y-6">
+    <div class="space-y-6" id="reviews-container">
         {% for feedback in feedbacks %}
-        <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="bg-white rounded-xl shadow-lg p-6" id="review-{{ feedback.id }}">
             <div class="flex justify-between items-start mb-4">
                 <div>
                     <h3 class="font-semibold text-lg">{{ feedback.name }}</h3>
                     <p class="text-amber-600">{{ feedback.email if feedback.email else "Анонім" }}</p>
+                    
                     <!-- Інформація про книгу -->
                     {% if feedback.book %}
                     <p class="text-blue-600 text-sm mt-1">
-                        <i class="fas fa-book mr-1"></i>Про книгу: "{{ feedback.book.title }}"
+                        <i class="fas fa-book mr-1"></i>Про книгу: "<strong>{{ feedback.book.title }}</strong>" - {{ feedback.book.author }}
+                    </p>
+                    {% elif feedback.book_id %}
+                    <p class="text-gray-500 text-sm mt-1">
+                        <i class="fas fa-book mr-1"></i>Книга більше не доступна
+                    </p>
+                    {% else %}
+                    <p class="text-gray-500 text-sm mt-1">
+                        <i class="fas fa-store mr-1"></i>Загальний відгук про магазин
                     </p>
                     {% endif %}
                 </div>
-                <div class="flex text-amber-400">
-                    {% for i in range(5) %}
-                        {% if i < feedback.rating %}
-                            <i class="fas fa-star"></i>
-                        {% else %}
-                            <i class="far fa-star"></i>
-                        {% endif %}
-                    {% endfor %}
+                <div class="flex flex-col items-end">
+                    <div class="flex text-amber-400 mb-2">
+                        {% for i in range(5) %}
+                            {% if i < feedback.rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="text-gray-500 text-sm">{{ feedback.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
                 </div>
             </div>
+            
             <p class="text-gray-700">{{ feedback.message }}</p>
+            
             <div class="flex justify-between items-center mt-4">
-                <span class="text-gray-500 text-sm">{{ feedback.created_at.strftime('%d.%m.%Y %H:%M') }}</span>
+                <div>
+                    {% if feedback.user and current_user.is_authenticated and feedback.user.id == current_user.id %}
+                    <span class="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded">Ваш відгук</span>
+                    {% endif %}
+                </div>
+                <div>
+                    {% if current_user.is_authenticated and (current_user.is_admin or feedback.user_id == current_user.id) %}
+                    <button onclick="editReview({{ feedback.id }})" class="text-blue-600 hover:text-blue-800 text-sm mr-2">
+                        <i class="fas fa-edit mr-1"></i>Редагувати
+                    </button>
+                    <button onclick="deleteReview({{ feedback.id }})" class="text-red-600 hover:text-red-800 text-sm">
+                        <i class="fas fa-trash mr-1"></i>Видалити
+                    </button>
+                    {% endif %}
+                </div>
             </div>
         </div>
         {% else %}
-        <div class="text-center py-8">
-            <p class="text-gray-500">Ще немає відгуків. Будьте першим!</p>
+        <div class="text-center py-8" id="no-reviews">
+            <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
+            <p class="text-gray-500 text-lg">Ще немає відгуків</p>
+            <p class="text-gray-400 text-sm mt-2">Будьте першим, хто залишить відгук!</p>
         </div>
         {% endfor %}
     </div>
 </div>
+
+{% if current_user.is_authenticated %}
+<script>
+// Обробник форми відгуку (тільки для авторизованих користувачів)
+document.getElementById('review-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const button = document.getElementById('submit-review');
+    const originalText = button.innerHTML;
+    
+    // Блокуємо кнопку на час виконання запиту
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Надсилаємо...';
+    
+    // Збираємо дані з форми
+    const reviewData = {
+        message: document.getElementById('review-message').value,
+        rating: parseInt(document.getElementById('review-rating').value),
+        name: document.getElementById('review-name').value,
+        email: document.getElementById('review-email').value || null,
+        book_id: document.getElementById('review-book').value || null
+    };
+    
+    // Перевірка даних
+    if (!reviewData.message.trim()) {
+        BookHub.showNotification('Будь ласка, введіть текст відгуку', 'error');
+        button.disabled = false;
+        button.innerHTML = originalText;
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/reviews', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(reviewData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Показуємо сповіщення про успіх
+            BookHub.showNotification('Відгук успішно надіслано! Він буде опублікований після перевірки.', 'success');
+            
+            // Очищаємо форму
+            document.getElementById('review-form').reset();
+            
+            // Відновлюємо ім'я та email для авторизованих користувачів
+            document.getElementById('review-name').value = '{{ current_user.username }}';
+            document.getElementById('review-email').value = '{{ current_user.email }}';
+            
+            // Додаємо новий відгук до списку (якщо він схвалений)
+            if (data.review && data.review.is_approved) {
+                addReviewToPage(data.review);
+            }
+        } else {
+            BookHub.showNotification(data.error || 'Помилка при надсиланні відгуку', 'error');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        if (error.message.includes('401')) {
+            BookHub.showNotification('Ваша сесія закінчилась. Будь ласка, увійдіть знову.', 'error');
+            setTimeout(() => {
+                window.location.href = "{{ url_for('auth.login', reason='session_expired') }}";
+            }, 2000);
+        } else {
+            BookHub.showNotification('Помилка мережі. Спробуйте ще раз.', 'error');
+        }
+    } finally {
+        // Відновлюємо кнопку
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+});
+
+// Функція для редагування відгуку
+function editReview(reviewId) {
+    const reviewElement = document.getElementById(`review-${reviewId}`);
+    const message = reviewElement.querySelector('p.text-gray-700').textContent;
+    const rating = reviewElement.querySelectorAll('.fa-star.fas').length;
+    
+    // Запитуємо новий текст відгуку
+    const newMessage = prompt('Редагувати відгук:', message);
+    if (newMessage === null) return;
+    
+    const newRating = prompt('Введіть новий рейтинг (1-5):', rating);
+    if (newRating === null) return;
+    
+    const ratingNum = parseInt(newRating);
+    if (ratingNum < 1 || ratingNum > 5) {
+        BookHub.showNotification('Рейтинг має бути від 1 до 5', 'error');
+        return;
+    }
+    
+    // Відправляємо запит на оновлення
+    fetch(`/api/v1/reviews/${reviewId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+            message: newMessage,
+            rating: ratingNum
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            BookHub.showNotification('Відгук успішно оновлено!', 'success');
+            // Оновлюємо відгук на сторінці
+            reviewElement.querySelector('p.text-gray-700').textContent = newMessage;
+            
+            // Оновлюємо зірочки
+            const starsContainer = reviewElement.querySelector('.flex.text-amber-400');
+            starsContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('i');
+                star.className = i <= ratingNum ? 'fas fa-star' : 'far fa-star';
+                starsContainer.appendChild(star);
+            }
+        } else {
+            BookHub.showNotification(data.error || 'Помилка при оновленні відгуку', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Помилка:', error);
+        BookHub.showNotification('Помилка мережі. Спробуйте ще раз.', 'error');
+    });
+}
+
+// Функція для видалення відгуку
+function deleteReview(reviewId) {
+    if (!confirm('Ви впевнені, що хочете видалити цей відгук?')) {
+        return;
+    }
+    
+    fetch(`/api/v1/reviews/${reviewId}`, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            BookHub.showNotification('Відгук успішно видалено!', 'success');
+            // Видаляємо відгук зі сторінки
+            document.getElementById(`review-${reviewId}`).remove();
+            
+            // Перевіряємо, чи залишилися відгуки
+            if (document.querySelectorAll('[id^="review-"]').length === 0) {
+                document.getElementById('reviews-container').innerHTML = `
+                    <div class="text-center py-8" id="no-reviews">
+                        <i class="fas fa-comments text-4xl text-gray-300 mb-4"></i>
+                        <p class="text-gray-500 text-lg">Ще немає відгуків</p>
+                        <p class="text-gray-400 text-sm mt-2">Будьте першим, хто залишить відгук!</p>
+                    </div>
+                `;
+            }
+        } else {
+            BookHub.showNotification(data.error || 'Помилка при видаленні відгуку', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Помилка:', error);
+        BookHub.showNotification('Помилка мережі. Спробуйте ще раз.', 'error');
+    });
+}
+
+// Функція для додавання відгуку на сторінку
+function addReviewToPage(review) {
+    // Видаляємо повідомлення "Ще немає відгуків"
+    const noReviews = document.getElementById('no-reviews');
+    if (noReviews) {
+        noReviews.remove();
+    }
+    
+    // Форматуємо дату
+    const date = new Date(review.created_at);
+    const formattedDate = date.toLocaleDateString('uk-UA', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    // Створюємо зірочки для рейтингу
+    let starsHtml = '';
+    for (let i = 1; i <= 5; i++) {
+        starsHtml += i <= review.rating ? '<i class="fas fa-star"></i>' : '<i class="far fa-star"></i>';
+    }
+    
+    // Визначаємо текст про книгу
+    let bookInfoHtml = '';
+    if (review.book_title) {
+        bookInfoHtml = `
+            <p class="text-blue-600 text-sm mt-1">
+                <i class="fas fa-book mr-1"></i>Про книгу: "<strong>${review.book_title}</strong>"
+            </p>
+        `;
+    } else if (review.book_id === null) {
+        bookInfoHtml = `
+            <p class="text-gray-500 text-sm mt-1">
+                <i class="fas fa-book mr-1"></i>Книга більше не доступна
+            </p>
+        `;
+    } else {
+        bookInfoHtml = `
+            <p class="text-gray-500 text-sm mt-1">
+                <i class="fas fa-store mr-1"></i>Загальний відгук про магазин
+            </p>
+        `;
+    }
+    
+    // Створюємо кнопки управління
+    let actionButtonsHtml = '';
+    const userId = {{ current_user.id if current_user.is_authenticated else 0 }};
+    const isAdmin = {{ current_user.is_admin|lower if current_user.is_authenticated else 'false' }};
+    
+    if (userId && (isAdmin === 'true' || review.user_id === userId)) {
+        actionButtonsHtml = `
+            <div>
+                <button onclick="editReview(${review.id})" class="text-blue-600 hover:text-blue-800 text-sm mr-2">
+                    <i class="fas fa-edit mr-1"></i>Редагувати
+                </button>
+                <button onclick="deleteReview(${review.id})" class="text-red-600 hover:text-red-800 text-sm">
+                    <i class="fas fa-trash mr-1"></i>Видалити
+                </button>
+            </div>
+        `;
+    }
+    
+    // Створюємо HTML для нового відгуку
+    const reviewHtml = `
+        <div class="bg-white rounded-xl shadow-lg p-6" id="review-${review.id}">
+            <div class="flex justify-between items-start mb-4">
+                <div>
+                    <h3 class="font-semibold text-lg">${review.name}</h3>
+                    <p class="text-amber-600">${review.email || "Анонім"}</p>
+                    ${bookInfoHtml}
+                </div>
+                <div class="flex flex-col items-end">
+                    <div class="flex text-amber-400 mb-2">
+                        ${starsHtml}
+                    </div>
+                    <span class="text-gray-500 text-sm">${formattedDate}</span>
+                </div>
+            </div>
+            <p class="text-gray-700">${review.message}</p>
+            <div class="flex justify-between items-center mt-4">
+                <div>
+                    ${review.user_id === userId ? '<span class="text-sm text-amber-600 bg-amber-50 px-2 py-1 rounded">Ваш відгук</span>' : ''}
+                </div>
+                ${actionButtonsHtml}
+            </div>
+        </div>
+    `;
+    
+    // Додаємо відгук на початок списку
+    const container = document.getElementById('reviews-container');
+    container.insertAdjacentHTML('afterbegin', reviewHtml);
+}
+</script>
+{% endif %}
 {% endblock %}

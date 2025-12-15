@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Реєстрація - BookHub{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-8">
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-amber-800 mb-6 text-center">Реєстрація в BookHub</h1>
+        
+        <form method="POST" action="{{ url_for('auth.register') }}" class="space-y-6">
+            <div>
+                <label class="block text-gray-700 mb-2">Логін <span class="text-red-500">*</span></label>
+                <input type="text" name="username" required minlength="3"
+                       class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                       placeholder="Введіть логін (мінімум 3 символи)">
+                <p class="text-sm text-gray-500 mt-1">Це ім'я відображатиметься на сайті</p>
+            </div>
+            
+            <div>
+                <label class="block text-gray-700 mb-2">Email <span class="text-red-500">*</span></label>
+                <input type="email" name="email" required
+                       class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                       placeholder="Введіть ваш email">
+            </div>
+            
+            <div>
+                <label class="block text-gray-700 mb-2">Пароль <span class="text-red-500">*</span></label>
+                <input type="password" name="password" required minlength="6"
+                       class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                       placeholder="Введіть пароль (мінімум 6 символів)">
+            </div>
+            
+            <div>
+                <label class="block text-gray-700 mb-2">Підтвердження пароля <span class="text-red-500">*</span></label>
+                <input type="password" name="confirm_password" required
+                       class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                       placeholder="Повторіть пароль">
+            </div>
+            
+            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-semibold">
+                Зареєструватися
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">Вже маєте акаунт?</p>
+            <a href="{{ url_for('auth.login') }}" class="text-amber-600 hover:text-amber-700 font-semibold">
+                Увійти
+            </a>
+        </div>
+        
+        <div class="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 class="font-semibold text-blue-800 mb-2">Переваги реєстрації:</h3>
+            <ul class="text-sm text-gray-700 space-y-1">
+                <li>• Зберігайте історію замовлень</li>
+                <li>• Отримуйте персональні рекомендації</li>
+                <li>• Швидше оформлюйте покупки</li>
+                <li>• Залишайте відгуки під своїм ім'ям</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

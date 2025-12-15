@@ -11,23 +11,63 @@
     <!-- Навігація -->
     <nav class="bg-amber-800 text-white p-4 shadow-lg">
         <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
-            <a href="/" class="text-2xl font-bold mb-4 md:mb-0">
+            <a href="/" class="text-2xl font-bold mb-4 md:mb-0 flex items-center">
                 <i class="fas fa-book mr-2"></i>BookHub
             </a>
-            <div class="space-x-4 text-center">
+            
+            <div class="space-x-4 text-center mb-4 md:mb-0">
                 <a href="/" class="hover:text-amber-200 px-3 py-2 rounded transition">Головна</a>
                 <a href="/about" class="hover:text-amber-200 px-3 py-2 rounded transition">Про нас</a>
                 <a href="/books" class="hover:text-amber-200 px-3 py-2 rounded transition">Книги</a>
                 <a href="/reviews" class="hover:text-amber-200 px-3 py-2 rounded transition">Відгуки</a>
-                <a href="/cart" class="hover:text-amber-200 px-3 py-2 rounded transition">
-                    <i class="fas fa-shopping-cart"></i> Кошик
-                    {% if session.cart %}
-                    <span class="bg-red-500 text-white rounded-full px-2 py-1 text-xs">
-                        {{ session.cart|length }}
-                    </span>
+                
+                <!-- Посилання на кошик з перевіркою авторизації -->
+                <a href="{% if current_user.is_authenticated %}{{ url_for('cart_page') }}{% else %}{{ url_for('auth.login', reason='cart') }}{% endif %}" 
+                   class="hover:text-amber-200 px-3 py-2 rounded transition relative">
+                    <i class="fas fa-shopping-cart"></i>
+                    {% if current_user.is_authenticated %}
+                    <span class="cart-counter absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center" style="display: none;">0</span>
                     {% endif %}
                 </a>
-                <a href="/admin" class="hover:text-amber-200 px-3 py-2 rounded transition bg-amber-600">Адмін</a>
+            </div>
+            
+            <div class="flex items-center space-x-4">
+                {% if current_user.is_authenticated %}
+                    <div class="relative">
+                        <button class="flex items-center space-x-2 hover:text-amber-200" id="userMenuBtn">
+                            <i class="fas fa-user"></i>
+                            <span>{{ current_user.username }}</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        
+                        <div class="absolute right-0 mt-2 w-48 bg-white text-gray-800 rounded-lg shadow-xl py-2 hidden" id="userMenu">
+                            <a href="{{ url_for('auth.profile') }}" class="block px-4 py-2 hover:bg-amber-50">
+                                <i class="fas fa-user-circle mr-2"></i>Профіль
+                            </a>
+                            
+                            {% if current_user.is_admin %}
+                            <a href="/admin" class="block px-4 py-2 hover:bg-amber-50">
+                                <i class="fas fa-cog mr-2"></i>Адмін-панель
+                            </a>
+                            <a href="/api/docs" class="block px-4 py-2 hover:bg-amber-50">
+                                <i class="fas fa-code mr-2"></i>API Документація
+                            </a>
+                            {% endif %}
+                            
+                            <div class="border-t my-1"></div>
+                            <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 hover:bg-red-50 text-red-600">
+                                <i class="fas fa-sign-out-alt mr-2"></i>Вийти
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="hover:text-amber-200 px-3 py-2 rounded transition">
+                        Вхід
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="bg-amber-600 hover:bg-amber-700 px-4 py-2 rounded transition">
+                        Реєстрація
+                    </a>
+                {% endif %}
             </div>
         </div>
     </nav>
@@ -35,10 +75,19 @@
     <!-- Flash повідомлення -->
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            <div class="container mx-auto mt-4">
+            <div class="container mx-auto mt-4 px-4">
                 {% for category, message in messages %}
-                    <div class="bg-{% if category == 'success' %}green{% else %}red{% endif %}-500 text-white p-4 rounded-lg mb-4">
-                        {{ message }}
+                    <div class="p-4 rounded-lg mb-2 {% if category == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif category == 'danger' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+                        <div class="flex items-center">
+                            {% if category == 'success' %}
+                                <i class="fas fa-check-circle mr-2"></i>
+                            {% elif category == 'danger' %}
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle mr-2"></i>
+                            {% endif %}
+                            {{ message }}
+                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -52,14 +101,155 @@
 
     <!-- Футер -->
     <footer class="bg-amber-900 text-white p-6 mt-8">
-        <div class="container mx-auto text-center">
-            <div class="mb-4">
-                <i class="fas fa-book text-3xl mb-2"></i>
-                <p class="text-xl font-bold">BookHub</p>
-                <p class="text-amber-200">Твоя книжкова спільнота</p>
+        <div class="container mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-book text-3xl mr-2"></i>
+                        <span class="text-xl font-bold">BookHub</span>
+                    </div>
+                    <p class="text-amber-200">Книжкова спільнота з 2025 року</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-3">Швидкі посилання</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-amber-200 hover:text-white">Головна</a></li>
+                        <li><a href="/books" class="text-amber-200 hover:text-white">Книги</a></li>
+                        <li><a href="/about" class="text-amber-200 hover:text-white">Про нас</a></li>
+                        <li><a href="/reviews" class="text-amber-200 hover:text-white">Відгуки</a></li>
+                        <li><a href="/api/docs" class="text-amber-200 hover:text-white">API Документація</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-bold mb-3">Контакти</h4>
+                    <p class="text-amber-200">Команда "Ardoes"</p>
+                    <p class="text-amber-200">Лабораторна робота 5</p>
+                    <p class="text-amber-200">Розробка RESTful API</p>
+                </div>
             </div>
-            <p>&copy; 2025 BookHub | Команда "Ardoes". Всі права захищено.</p>
+            
+            <div class="border-t border-amber-700 mt-6 pt-6 text-center">
+                <p>&copy; 2025 BookHub | Команда "Ardoes". Всі права захищено.</p>
+                <p class="text-amber-300 text-sm mt-2">REST API версія 1.0 | Swagger документація доступна за адресою /api/docs</p>
+            </div>
         </div>
     </footer>
+
+    <!-- Глобальні JavaScript функції -->
+    <script>
+        // Глобальний об'єкт BookHub для функцій
+        window.BookHub = window.BookHub || {};
+
+        // Функція для показу сповіщень
+        BookHub.showNotification = function(message, type = 'success') {
+            let container = document.getElementById('notification-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'notification-container';
+                container.className = 'fixed top-4 right-4 z-50 space-y-2';
+                document.body.appendChild(container);
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = `p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+                type === 'success' 
+                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                    : 'bg-red-100 text-red-800 border border-red-200'
+            }`;
+            
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-500 hover:text-gray-700">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        };
+
+        // Функція для оновлення лічильника кошика
+        BookHub.updateCartCounter = function(count) {
+            let cartCounter = document.querySelector('.cart-counter');
+            
+            if (count > 0) {
+                if (!cartCounter) {
+                    const cartLink = document.querySelector('a[href*="/cart"]');
+                    if (cartLink) {
+                        cartCounter = document.createElement('span');
+                        cartCounter.className = 'cart-counter absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center';
+                        cartLink.appendChild(cartCounter);
+                    }
+                }
+                if (cartCounter) {
+                    cartCounter.textContent = count;
+                    cartCounter.style.display = 'flex';
+                }
+            } else if (cartCounter) {
+                cartCounter.style.display = 'none';
+            }
+        };
+
+        // Отримати поточний стан кошика при завантаженні сторінки
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/api/v1/cart')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        BookHub.updateCartCounter(data.total_items || data.count || 0);
+                    }
+                })
+                .catch(error => console.error('Помилка при отриманні кошика:', error));
+        });
+
+        // Простий скрипт для випадаючого меню
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userMenu = document.getElementById('userMenu');
+            
+            if (userMenuBtn && userMenu) {
+                userMenuBtn.addEventListener('mouseenter', function() {
+                    userMenu.classList.remove('hidden');
+                });
+                
+                userMenuBtn.addEventListener('mouseleave', function() {
+                    setTimeout(() => {
+                        if (!userMenu.matches(':hover')) {
+                            userMenu.classList.add('hidden');
+                        }
+                    }, 100);
+                });
+                
+                userMenuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('hidden');
+                });
+                
+                userMenu.addEventListener('mouseenter', function() {
+                    userMenu.classList.remove('hidden');
+                });
+                
+                userMenu.addEventListener('mouseleave', function() {
+                    userMenu.classList.add('hidden');
+                });
+                
+                document.addEventListener('click', function(e) {
+                    if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

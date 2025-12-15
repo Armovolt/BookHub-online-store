@@ -8,9 +8,9 @@
 
     {% if cart_items %}
     <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-        <div class="space-y-4">
+        <div class="space-y-4" id="cart-items-container">
             {% for item in cart_items %}
-            <div class="flex items-center justify-between border-b border-amber-200 pb-4">
+            <div class="flex items-center justify-between border-b border-amber-200 pb-4" id="cart-item-{{ item.book.id }}">
                 <div class="flex items-center space-x-4">
                     <div class="bg-amber-100 p-3 rounded-lg">
                         <i class="fas fa-book text-amber-600 text-xl"></i>
@@ -23,14 +23,17 @@
                 </div>
                 
                 <div class="flex items-center space-x-4">
-                    <form method="POST" action="{{ url_for('update_cart', book_id=item.book.id) }}" class="flex items-center space-x-2">
-                        <input type="number" name="quantity" value="{{ item.quantity }}" min="1" max="{{ item.book.stock_quantity }}"
+                    <div class="flex items-center space-x-2">
+                        <input type="number" id="quantity-{{ item.book.id }}" value="{{ item.quantity }}" min="1" max="{{ item.book.stock_quantity }}"
                                class="w-16 p-2 border border-amber-300 rounded text-center">
-                        <button type="submit" class="bg-amber-600 text-white px-3 py-2 rounded hover:bg-amber-700">
+                        <button onclick="updateCartItem({{ item.book.id }})" class="bg-amber-600 text-white px-3 py-2 rounded hover:bg-amber-700">
                             Оновити
                         </button>
-                    </form>
-                    <p class="font-bold text-lg">{{ item.total }} ₴</p>
+                    </div>
+                    <button onclick="removeFromCart({{ item.book.id }})" class="bg-red-600 text-white px-3 py-2 rounded hover:bg-red-700">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <p class="font-bold text-lg" id="total-{{ item.book.id }}">{{ item.total }} ₴</p>
                 </div>
             </div>
             {% endfor %}
@@ -39,12 +42,15 @@
         <div class="mt-6 pt-4 border-t border-amber-200">
             <div class="flex justify-between items-center text-xl font-bold">
                 <span>Загальна сума:</span>
-                <span class="text-amber-700">{{ total }} ₴</span>
+                <span class="text-amber-700" id="cart-total">{{ total }} ₴</span>
             </div>
         </div>
     </div>
 
-    <div class="text-center">
+    <div class="text-center space-x-4">
+        <button onclick="clearCart()" class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition">
+            <i class="fas fa-trash mr-2"></i>Очистити кошик
+        </button>
         <a href="{{ url_for('checkout') }}" class="bg-green-600 text-white px-8 py-4 rounded-lg hover:bg-green-700 transition text-lg font-semibold">
             <i class="fas fa-credit-card mr-2"></i>Перейти до оформлення
         </a>
@@ -60,4 +66,212 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+// Функція для оновлення кількості товару
+async function updateCartItem(bookId) {
+    const quantityInput = document.getElementById(`quantity-${bookId}`);
+    const quantity = parseInt(quantityInput.value);
+    
+    if (quantity < 1) {
+        showNotification('Кількість має бути не менше 1', 'error');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/v1/cart/${bookId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                quantity: quantity
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Кількість оновлена', 'success');
+            
+            // Оновлюємо ціну товару
+            const bookPrice = parseFloat(document.querySelector(`#cart-item-${bookId} .text-amber-700`).textContent.replace(' ₴', ''));
+            const newTotal = bookPrice * quantity;
+            document.getElementById(`total-${bookId}`).textContent = `${newTotal.toFixed(2)} ₴`;
+            
+            // Оновлюємо загальну суму
+            updateCartTotal();
+        } else {
+            showNotification(data.error || 'Помилка при оновленні', 'error');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        showNotification('Помилка мережі. Спробуйте ще раз.', 'error');
+    }
+}
+
+// Функція для видалення товару з кошика
+async function removeFromCart(bookId) {
+    if (!confirm('Видалити цю книгу з кошика?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/api/v1/cart/${bookId}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Книга видалена з кошика', 'success');
+            
+            // Видаляємо елемент зі сторінки
+            document.getElementById(`cart-item-${bookId}`).remove();
+            
+            // Оновлюємо лічильник кошика
+            updateCartCounter(data.total_items || 0);
+            
+            // Оновлюємо загальну суму
+            updateCartTotal();
+            
+            // Перевіряємо, чи кошик порожній
+            checkIfCartEmpty();
+        } else {
+            showNotification(data.error || 'Помилка при видаленні', 'error');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        showNotification('Помилка мережі. Спробуйте ще раз.', 'error');
+    }
+}
+
+// Функція для очищення всього кошика
+async function clearCart() {
+    if (!confirm('Ви впевнені, що хочете очистити весь кошик?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/v1/cart', {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('Кошик очищено', 'success');
+            
+            // Видаляємо всі елементи кошика
+            document.getElementById('cart-items-container').innerHTML = '';
+            
+            // Оновлюємо лічильник кошика
+            updateCartCounter(0);
+            
+            // Показуємо повідомлення про порожній кошик
+            checkIfCartEmpty();
+        } else {
+            showNotification(data.error || 'Помилка при очищенні кошика', 'error');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        showNotification('Помилка мережі. Спробуйте ще раз.', 'error');
+    }
+}
+
+// Функція для оновлення загальної суми
+function updateCartTotal() {
+    let total = 0;
+    document.querySelectorAll('[id^="total-"]').forEach(element => {
+        const price = parseFloat(element.textContent.replace(' ₴', ''));
+        total += price;
+    });
+    
+    document.getElementById('cart-total').textContent = `${total.toFixed(2)} ₴`;
+}
+
+// Функція для перевірки, чи кошик порожній
+function checkIfCartEmpty() {
+    const cartItems = document.querySelectorAll('[id^="cart-item-"]');
+    const cartContainer = document.querySelector('.bg-white.rounded-xl.shadow-lg.p-6');
+    
+    if (cartItems.length === 0 && cartContainer) {
+        cartContainer.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-shopping-cart text-6xl text-gray-300 mb-4"></i>
+                <h2 class="text-2xl font-bold text-gray-600 mb-4">Ваш кошик порожній</h2>
+                <p class="text-gray-500 mb-6">Додайте книги до кошика, щоб зробити покупку</p>
+                <a href="/books" class="bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition">
+                    Перейти до каталогу
+                </a>
+            </div>
+        `;
+    }
+}
+
+// Функція для показу сповіщень
+function showNotification(message, type = 'success') {
+    let container = document.getElementById('notification-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'notification-container';
+        container.className = 'fixed top-4 right-4 z-50 space-y-2';
+        document.body.appendChild(container);
+    }
+    
+    const notification = document.createElement('div');
+    notification.className = `p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+        type === 'success' 
+            ? 'bg-green-100 text-green-800 border border-green-200' 
+            : 'bg-red-100 text-red-800 border border-red-200'
+    }`;
+    
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} mr-2"></i>
+            <span>${message}</span>
+            <button onclick="this.parentElement.parentElement.remove()" class="ml-auto text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    container.appendChild(notification);
+    
+    setTimeout(() => {
+        if (notification.parentElement) {
+            notification.remove();
+        }
+    }, 5000);
+}
+
+// Функція для оновлення лічильника кошика в навігації
+function updateCartCounter(count) {
+    let cartCounter = document.querySelector('.cart-counter');
+    
+    if (count > 0) {
+        if (!cartCounter) {
+            const cartLink = document.querySelector('a[href="/cart"]');
+            if (cartLink) {
+                cartCounter = document.createElement('span');
+                cartCounter.className = 'cart-counter absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center';
+                cartLink.appendChild(cartCounter);
+            }
+        }
+        if (cartCounter) {
+            cartCounter.textContent = count;
+            cartCounter.style.display = 'flex';
+        }
+    } else if (cartCounter) {
+        cartCounter.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}

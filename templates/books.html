@@ -58,10 +58,10 @@
                 
                 <div class="flex space-x-2">
                     {% if book.in_stock %}
-                    <a href="{{ url_for('add_to_cart', book_id=book.id) }}" 
-                       class="flex-1 bg-amber-600 text-white text-center py-2 rounded-lg hover:bg-amber-700 transition">
+                    <button onclick="addToCart({{ book.id }})" 
+                            class="add-to-cart-btn flex-1 bg-amber-600 text-white text-center py-2 rounded-lg hover:bg-amber-700 transition">
                         <i class="fas fa-cart-plus mr-2"></i>В кошик
-                    </a>
+                    </button>
                     {% else %}
                     <button disabled class="flex-1 bg-gray-400 text-white text-center py-2 rounded-lg cursor-not-allowed">
                         Недоступно
@@ -77,4 +77,69 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+// Функція для додавання книги до кошика через API
+async function addToCart(bookId) {
+    // Перевіряємо чи користувач авторизований
+    const isAuthenticated = {% if current_user.is_authenticated %}true{% else %}false{% endif %};
+    
+    if (!isAuthenticated) {
+        // Миттєво перенаправляємо на сторінку входу з параметром reason=cart
+        // та зберігаємо поточну сторінку для повернення після входу
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = "{{ url_for('auth.login') }}?reason=cart&next=" + encodeURIComponent(currentPath);
+        return;
+    }
+    
+    // Знаходимо кнопку, на яку натиснули
+    const button = document.querySelector(`button[onclick="addToCart(${bookId})"]`);
+    
+    if (!button) {
+        console.error('Кнопку не знайдено');
+        return;
+    }
+    
+    const originalText = button.innerHTML;
+    const originalClasses = button.className;
+    
+    // Блокуємо кнопку на час виконання запиту
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Додаємо...';
+    button.classList.remove('bg-amber-600', 'hover:bg-amber-700');
+    button.classList.add('bg-gray-400');
+    
+    try {
+        const response = await fetch('/api/v1/cart', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                book_id: bookId,
+                quantity: 1
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // Використовуємо глобальну функцію з base.html
+            BookHub.showNotification('Книга додана до кошика!', 'success');
+            BookHub.updateCartCounter(data.total_items || 0);
+        } else {
+            BookHub.showNotification(data.error || 'Помилка при додаванні до кошика', 'error');
+        }
+    } catch (error) {
+        console.error('Помилка:', error);
+        BookHub.showNotification('Помилка мережі. Спробуйте ще раз.', 'error');
+    } finally {
+        // Відновлюємо кнопку
+        button.disabled = false;
+        button.innerHTML = originalText;
+        button.className = originalClasses;
+    }
+}
+</script>
 {% endblock %}

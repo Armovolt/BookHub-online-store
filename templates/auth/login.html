@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Вхід - BookHub{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto mt-8">
+    <div class="bg-white rounded-xl shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-amber-800 mb-6 text-center">Вхід до BookHub</h1>
+        
+        <!-- Спеціальне повідомлення, якщо користувач спробував додати до кошика без входу -->
+{% if reason == 'cart' %}
+<div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center">
+        <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+        <div>
+            <p class="font-semibold text-yellow-800">Увага!</p>
+            <p class="text-yellow-700 text-sm">Будь ласка, увійдіть щоб додавати товари до кошика.</p>
+        </div>
+    </div>
+</div>
+{% elif reason == 'review' %}
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+    <div class="flex items-center">
+        <i class="fas fa-comment-alt text-blue-500 mr-2"></i>
+        <div>
+            <p class="font-semibold text-blue-800">Для залишення відгуку потрібно увійти</p>
+            <p class="text-blue-700 text-sm">Авторизуйтесь, щоб поділитися своїми враженнями про книги.</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+        
+        <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
+            <!-- Приховане поле для зберігання сторінки повернення -->
+            {% if next_page %}
+            <input type="hidden" name="next" value="{{ next_page }}">
+            {% endif %}
+            
+            <div>
+                <label class="block text-gray-700 mb-2">Логін</label>
+                <input type="text" name="username" required 
+                       class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                       placeholder="Введіть ваш логін">
+            </div>
+            
+            <div>
+                <label class="block text-gray-700 mb-2">Пароль</label>
+                <input type="password" name="password" required 
+                       class="w-full p-3 border border-amber-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                       placeholder="Введіть ваш пароль">
+            </div>
+            
+            <div class="flex items-center">
+                <input type="checkbox" name="remember" id="remember" class="mr-2">
+                <label for="remember" class="text-gray-700">Запам'ятати мене</label>
+            </div>
+            
+            <button type="submit" class="w-full bg-amber-600 text-white py-3 rounded-lg hover:bg-amber-700 transition font-semibold">
+                Увійти
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center">
+            <p class="text-gray-600">Ще не маєте акаунта?</p>
+            <a href="{{ url_for('auth.register') }}" class="text-amber-600 hover:text-amber-700 font-semibold">
+                Зареєструватися
+            </a>
+        </div>
+        
+        <div class="mt-6 p-4 bg-amber-50 rounded-lg">
+            <h3 class="font-semibold text-amber-800 mb-2">Тестові акаунти:</h3>
+            <p class="text-sm text-gray-700"><strong>Адмін:</strong> логін=admin, пароль=admin123</p>
+            <p class="text-sm text-gray-700"><strong>Користувач:</strong> логін=user, пароль=user123</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
