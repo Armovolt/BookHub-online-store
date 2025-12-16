@@ -155,7 +155,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 
 ```
 **Скріншот з Swagger:**
---+
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/GET%20api-v1-cart.png
 
 
 ### 5. Створення відгуку
@@ -239,7 +239,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 
 ```
 **Скріншот з Swagger:**
---+
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/GET%20api-v1-stats.png
 
 
 ### 8. Створення книги (адмін)
@@ -272,7 +272,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 
 ```
 **Скріншот з Swagger:**
---+
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/POST%20api-v1-books.png
 
 
 ### 9. Оновлення книги (адмін)
@@ -286,7 +286,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 }
 
 **Скріншот з Swagger:**
---+
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/PUT%20api-v1-books-7.png
 
 
 ### 10. Видалення книги (адмін)
@@ -299,7 +299,8 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 Приклад запиту: DELETE /api/v1/books/1?delete_reviews=false
 
 **Скріншот з Swagger:**
---+
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/DELETE%20api-v1-books-%7Bbook_id%7D.png
+
 
 
 
@@ -315,8 +316,9 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-**Скріншот:**
---
+*Скріншот:*
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/test-1-get-books.png
+
 
 
 ### Тестовий сценарій 2: Авторизація користувача
@@ -332,8 +334,9 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-**Скріншот:**
---
+*Скріншот:*
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/test-2-auth-login.png
+
 
 
 ### Тестовий сценарій 3: Додавання книги до кошика
@@ -349,8 +352,9 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-**Скріншот:**
---
+*Скріншот:*
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/test-3-cart-add.png
+
 
 
 ### Тестовий сценарій 4: Створення відгуку
@@ -366,8 +370,9 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 201
 
-**Скріншот:**
---
+*Скріншот:*
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/test-4-review-create.png
+
 
 
 ### Тестовий сценарій 5: Пошук книг
@@ -381,8 +386,9 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-**Скріншот:**
---
+*Скріншот:*
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/test-5-search-books.png
+
 
 
 ### Тестовий сценарій 6: Обробка помилки авторизації
@@ -398,8 +404,9 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 401
 
-**Скріншот:**
---
+*Скріншот:*
+https://github.com/Armovolt/BookHub-online-store/blob/df49696cfb877744ceea0ae85dffd8b42e6cad4f/screenshots_lab05/test-6-auth-error.png
+
 
 
 
