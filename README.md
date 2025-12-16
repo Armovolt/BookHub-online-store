@@ -67,9 +67,10 @@ BookHub - це повноцінний веб-додаток для продаж�
   ]
 }
 
-Скріншот з Swagger:
-https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-1-get-books.png
 ```
+**Скріншот з Swagger:**
+https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-1-get-books.png
+
 
 ### 2. Авторизація користувача
 - **URL:** /api/v1/auth/login
@@ -95,9 +96,10 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   }
 }
 
-Скріншот з Swagger:
-https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-2-auth-login.png
 ```
+**Скріншот з Swagger:**
+https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-2-auth-login.png
+
 
 ### 3. Додавання книги до кошика
 - **URL:** /api/v1/cart
@@ -119,9 +121,10 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   "total_items": 2
 }
 
-Скріншот з Swagger:
-https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-3-cart-add.png
 ```
+**Скріншот з Swagger:**
+https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-3-cart-add.png
+
 
 ### 4. Отримання вмісту кошика
 - **URL:** /api/v1/cart
@@ -149,9 +152,11 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   "total_items": 2
 }
 
-Скріншот з Swagger:
 
 ```
+**Скріншот з Swagger:**
+--
+
 
 ### 5. Створення відгуку
 - **URL:** /api/v1/reviews
@@ -179,9 +184,10 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   }
 }
 
-Скріншот з Swagger:
-https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-4-review-create.png
 ```
+**Скріншот з Swagger:**
+https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-4-review-create.png
+
 
 ### 6. Пошук книг
 - **URL:** /api/v1/search/books?q={query}
@@ -204,9 +210,10 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   ]
 }
 
-Скріншот з Swagger:
-https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-5-search-books.png
 ```
+**Скріншот з Swagger:**
+https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0a99d29fb7cc545/screenshots_lab05/test-5-search-books.png
+
 
 ### 7. Отримання статистики (адмін)
 - **URL:** /api/v1/stats
@@ -228,9 +235,12 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   }
 }
 
-Скріншот з Swagger:
+
 
 ```
+**Скріншот з Swagger:**
+--
+
 
 ### 8. Створення книги (адмін)
 - **URL:** /api/v1/books
@@ -258,9 +268,12 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   }
 }
 
-Скріншот з Swagger:
+
 
 ```
+**Скріншот з Swagger:**
+--
+
 
 ### 9. Оновлення книги (адмін)
 - **URL:** /api/v1/books/{id}
@@ -272,8 +285,8 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
   "stock_quantity": 20
 }
 
-Скріншот з Swagger:
-
+**Скріншот з Swagger:**
+--
 
 
 ### 10. Видалення книги (адмін)
@@ -285,12 +298,13 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Приклад запиту: DELETE /api/v1/books/1?delete_reviews=false
 
-Скріншот з Swagger:
+**Скріншот з Swagger:**
+--
 
 
 
 # Результати тестування в Swagger
-Тестовий сценарій 1: Отримання списку книг
+### Тестовий сценарій 1: Отримання списку книг
 Мета: Перевірити роботу GET запиту для отримання всіх книг
 
 Ендпоінт: GET /api/v1/books
@@ -301,10 +315,11 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-Скріншот:
+**Скріншот:**
+--
 
 
-Тестовий сценарій 2: Авторизація користувача
+### Тестовий сценарій 2: Авторизація користувача
 Мета: Перевірити роботу системи авторизації
 
 Ендпоінт: POST /api/v1/auth/login
@@ -317,10 +332,11 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-Скріншот:
+**Скріншот:**
+--
 
 
-Тестовий сценарій 3: Додавання книги до кошика
+### Тестовий сценарій 3: Додавання книги до кошика
 Мета: Перевірити роботу з кошиком покупок
 
 Ендпоінт: POST /api/v1/cart
@@ -333,10 +349,11 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-Скріншот:
+**Скріншот:**
+--
 
 
-Тестовий сценарій 4: Створення відгуку
+### Тестовий сценарій 4: Створення відгуку
 Мета: Перевірити функціонал створення відгуків
 
 Ендпоінт: POST /api/v1/reviews
@@ -349,10 +366,11 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 201
 
-Скріншот:
+**Скріншот:**
+--
 
 
-Тестовий сценарій 5: Пошук книг
+### Тестовий сценарій 5: Пошук книг
 Мета: Перевірити функціонал пошуку
 
 Ендпоінт: GET /api/v1/search/books?q=Стівен
@@ -363,10 +381,11 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 200
 
-Скріншот:
+**Скріншот:**
+--
 
 
-Тестовий сценарій 6: Обробка помилки авторизації
+### Тестовий сценарій 6: Обробка помилки авторизації
 Мета: Перевірити обробку неправильних облікових даних
 
 Ендпоінт: POST /api/v1/auth/login
@@ -379,12 +398,13 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 
 Код відповіді: 401
 
-Скріншот:
+**Скріншот:**
+--
 
 
 
-Обробка помилок
-Список реалізованих кодів помилок з прикладами:
+## Обробка помилок
+### Список реалізованих кодів помилок з прикладами:
 
 400 Bad Request - виникає при відправленні неправильних даних (відсутні обов'язкові поля, неправильний формат)
 
@@ -418,7 +438,7 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 }
 
 
-Документація API
+## Документація API
 Повна інтерактивна документація доступна за адресою: http://localhost:5000/api/docs/
 
 Swagger UI дозволяє:
