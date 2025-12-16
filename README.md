@@ -155,7 +155,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 
 ```
 **Скріншот з Swagger:**
---
+--+
 
 
 ### 5. Створення відгуку
@@ -239,7 +239,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 
 ```
 **Скріншот з Swagger:**
---
+--+
 
 
 ### 8. Створення книги (адмін)
@@ -272,7 +272,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 
 ```
 **Скріншот з Swagger:**
---
+--+
 
 
 ### 9. Оновлення книги (адмін)
@@ -286,7 +286,7 @@ https://github.com/Armovolt/BookHub-online-store/blob/fa8f149a9a9ae9685570eaf9e0
 }
 
 **Скріншот з Swagger:**
---
+--+
 
 
 ### 10. Видалення книги (адмін)
@@ -299,7 +299,7 @@ URL: /api/v1/books/{id}?delete_reviews={true/false}
 Приклад запиту: DELETE /api/v1/books/1?delete_reviews=false
 
 **Скріншот з Swagger:**
---
+--+
 
 
 
