@@ -41,8 +41,8 @@ BookHub - це повноцінний веб-додаток для продаж�
 - **Postman** - тестування API
 - **Swagger UI** - інтерактивна документація API
 
-## Endpoints API
-# Результати тестування в Swagger
+# Endpoints API
+## Результати тестування в Swagger
 
 ### 1. Отримання всіх книг
 - **URL:** `/api/v1/books`
