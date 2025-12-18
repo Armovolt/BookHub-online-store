@@ -415,6 +415,13 @@ def checkout():
     
     return render_template('shop/checkout.html', cart_items=cart_items, total=total, user=current_user)
 
+# ========== ДЕМОНСТРАЦІЯ API (Лабораторна робота 6) ==========
+@app.route('/api-demo')
+@login_required
+def api_demo():
+    """Сторінка демонстрації роботи з API - Лабораторна робота 6"""
+    return render_template('api-demo.html', user=current_user)
+
 # ========== АДМІН-ПАНЕЛЬ ==========
 @app.route('/admin')
 @login_required

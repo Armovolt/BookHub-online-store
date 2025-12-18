@@ -1,0 +1,1350 @@
+{% extends "base.html" %}
+
+{% block title %}Демонстрація API - BookHub{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-4xl font-bold text-amber-800 mb-8 text-center">Інтеграція фронтенду з API</h1>
+    
+    <!-- Інформація про лабораторну -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-amber-700 mb-4">📚 Про демонстрацію API</h2>
+        <p class="text-gray-700 mb-4">
+            Ця сторінка демонструє пряму взаємодію JavaScript фронтенду з REST API BookHub. 
+            <strong>Усі операції виконуються через JavaScript без перезавантаження сторінки.</strong>
+        </p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-green-50 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2"><i class="fas fa-check-circle mr-2 text-green-600"></i>Вже реалізовано</h3>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• Отримання книг з API</li>
+                    <li>• Додавання до кошика через API</li>
+                    <li>• Створення відгуків через API</li>
+                    <li>• Обробка помилок</li>
+                </ul>
+            </div>
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2"><i class="fas fa-cogs mr-2 text-blue-600"></i>Технології</h3>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• JavaScript Fetch API</li>
+                    <li>• async/await</li>
+                    <li>• JSON формат даних</li>
+                    <li>• Обробка HTTP статусів</li>
+                </ul>
+            </div>
+            <div class="bg-amber-50 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2"><i class="fas fa-code mr-2 text-amber-600"></i>Приклади коду</h3>
+                <ul class="text-sm text-gray-700 space-y-1">
+                    <li>• books.html - додавання до кошика</li>
+                    <li>• reviews.html - створення відгуків</li>
+                    <li>• cart.html - робота з кошиком</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Практична демонстрація роботи з API -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-amber-700 mb-4">🎯 Практична демонстрація інтеграції фронтенду з API</h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Секція 1: Отримання книг з API -->
+            <div class="bg-blue-50 p-6 rounded-lg api-demo-card">
+                <h3 class="font-semibold mb-3 text-blue-800 flex items-center">
+                    <i class="fas fa-download mr-2"></i>📚 Список книг з API
+                </h3>
+                <p class="text-sm text-blue-600 mb-4">Ці книги завантажуються безпосередньо з API через JavaScript</p>
+                
+                <div class="flex gap-2 mb-4">
+                    <button onclick="loadBooksFromAPI()" 
+                            class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 font-semibold transition">
+                        <i class="fas fa-sync-alt mr-2"></i>Завантажити книги з API
+                    </button>
+                    <button onclick="showAllBooks()" 
+                            class="bg-blue-500 text-white px-4 py-3 rounded-lg hover:bg-blue-600 font-semibold transition">
+                        <i class="fas fa-list mr-2"></i>Показати всі
+                    </button>
+                </div>
+                
+                <div class="mb-2 flex justify-between items-center">
+                    <span class="text-sm text-gray-600" id="books-count">Книги будуть завантажені...</span>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500">Показано:</span>
+                        <select id="books-limit" onchange="changeBooksLimit()" class="text-sm p-1 border rounded">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="0">Всі</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div id="books-list" class="space-y-3 h-96 overflow-y-auto p-2 bg-white rounded border border-blue-200">
+                    <div class="text-center py-8">
+                        <i class="fas fa-book text-3xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500">Натисніть кнопку вище, щоб завантажити книги з API</p>
+                        <p class="text-gray-400 text-sm mt-1">Дані будуть завантажені з: <code class="text-xs">GET /api/v1/books</code></p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Секція 2: Додавання відгуку через API -->
+            <div class="bg-green-50 p-6 rounded-lg api-demo-card">
+                <h3 class="font-semibold mb-3 text-green-800 flex items-center">
+                    <i class="fas fa-paper-plane mr-2"></i>💬 Додати відгук через API
+                </h3>
+                <p class="text-sm text-green-600 mb-4">Відправка даних на сервер через POST запит</p>
+                
+                <div id="review-form-container">
+                    {% if current_user.is_authenticated %}
+                    <form id="review-form-demo" class="space-y-4">
+                        <div>
+                            <label class="block text-gray-700 mb-2 font-medium">Ваше ім'я *</label>
+                            <input type="text" id="review-name-demo" 
+                                   class="w-full p-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                   placeholder="Введіть ваше ім'я" 
+                                   value="{{ current_user.username }}"
+                                   readonly 
+                                   required>
+                            <p class="text-xs text-gray-500 mt-1">Для авторизованих користувачів ім'я заповнюється автоматично</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 mb-2 font-medium">Повідомлення *</label>
+                            <textarea id="review-message-demo" rows="4" required
+                                      class="w-full p-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                      placeholder="Ваш відгук про книгу або магазин..."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 mb-2 font-medium">Оцінка</label>
+                            <select id="review-rating-demo" 
+                                    class="w-full p-3 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500">
+                                <option value="5">★★★★★ Відмінно</option>
+                                <option value="4">★★★★☆ Дуже добре</option>
+                                <option value="3" selected>★★★☆☆ Добре</option>
+                                <option value="2">★★☆☆☆ Задовільно</option>
+                                <option value="1">★☆☆☆☆ Погано</option>
+                            </select>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                            <button type="submit" 
+                                    class="flex-1 bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 font-semibold transition">
+                                <i class="fas fa-paper-plane mr-2"></i>Надіслати відгук через API
+                            </button>
+                            
+                            <button type="button" onclick="clearReviewForm()"
+                                    class="flex-1 bg-gray-200 text-gray-800 px-4 py-3 rounded-lg hover:bg-gray-300 font-semibold transition">
+                                <i class="fas fa-eraser mr-2"></i>Очистити форму
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6 text-center">
+                        <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl mb-2"></i>
+                        <p class="text-yellow-800 font-semibold mb-2">Для додавання відгуку потрібно увійти</p>
+                        <p class="text-yellow-700 text-sm mb-4">Авторизуйтесь, щоб поділитися своїми враженнями про книги.</p>
+                        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                            <a href="{{ url_for('auth.login', reason='review') }}" class="bg-amber-600 text-white px-6 py-3 rounded-lg hover:bg-amber-700 transition">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Увійти
+                            </a>
+                            <a href="{{ url_for('auth.register') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+                                <i class="fas fa-user-plus mr-2"></i>Зареєструватися
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div id="form-result-demo" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Тестування API прямо на сторінці -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-amber-700 mb-4">🔄 Тестування API онлайн</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2 flex items-center">
+                    <i class="fas fa-books text-blue-600 mr-2"></i>GET /api/v1/books
+                </h3>
+                <p class="text-gray-600 text-sm mb-3">Отримати список всіх книг</p>
+                <button onclick="testGetBooks()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full">
+                    <i class="fas fa-download mr-2"></i>Тестувати GET запит
+                </button>
+                <div id="test-result" class="mt-3 p-3 bg-white rounded border border-blue-200 text-sm min-h-16"></div>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2 flex items-center">
+                    <i class="fas fa-shopping-cart text-green-600 mr-2"></i>Перевірка кошика
+                </h3>
+                <p class="text-gray-600 text-sm mb-3">Робота з сесією кошика</p>
+                <button onclick="testCartAPI()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full">
+                    <i class="fas fa-shopping-cart mr-2"></i>Тестувати кошик
+                </button>
+                <div id="cart-test-result" class="mt-3 p-3 bg-white rounded border border-green-200 text-sm min-h-16"></div>
+            </div>
+            
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2 flex items-center">
+                    <i class="fas fa-search text-purple-600 mr-2"></i>Пошук книг
+                </h3>
+                <p class="text-gray-600 text-sm mb-2">Пошук за назвою або автором</p>
+                <div class="flex gap-2 mb-3">
+                    <input type="text" id="search-demo-input" 
+                           placeholder="Введіть пошуковий запит"
+                           class="flex-1 p-2 border border-purple-300 rounded text-sm">
+                    <button onclick="searchBooksDemo()" class="bg-purple-600 text-white px-3 py-2 rounded hover:bg-purple-700">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div id="search-test-result" class="p-3 bg-white rounded border border-purple-200 text-sm min-h-24 max-h-48 overflow-y-auto"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Перевірка доступності API -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-amber-700 mb-4">🛠️ Перевірка доступності API</h2>
+        
+        <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="checkEndpoint('/api/v1/books', 'GET')" class="bg-blue-100 text-blue-800 p-4 rounded-lg hover:bg-blue-200 transition">
+                    <i class="fas fa-book mr-2"></i>GET /books
+                </button>
+                <button onclick="checkAuthEndpoint()" class="bg-green-100 text-green-800 p-4 rounded-lg hover:bg-green-200 transition">
+                    <i class="fas fa-sign-in-alt mr-2"></i>POST /auth/login
+                </button>
+                <button onclick="checkEndpoint('/api/v1/stats', 'GET')" class="bg-purple-100 text-purple-800 p-4 rounded-lg hover:bg-purple-200 transition">
+                    <i class="fas fa-chart-bar mr-2"></i>GET /stats
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="checkEndpoint('/api/v1/reviews', 'GET')" class="bg-yellow-100 text-yellow-800 p-4 rounded-lg hover:bg-yellow-200 transition">
+                    <i class="fas fa-comment mr-2"></i>GET /reviews
+                </button>
+                <button onclick="checkEndpoint('/api/v1/customers', 'GET')" class="bg-red-100 text-red-800 p-4 rounded-lg hover:bg-red-200 transition">
+                    <i class="fas fa-users mr-2"></i>GET /customers
+                </button>
+                <button onclick="checkEndpoint('/api/v1/orders', 'GET')" class="bg-indigo-100 text-indigo-800 p-4 rounded-lg hover:bg-indigo-200 transition">
+                    <i class="fas fa-shopping-cart mr-2"></i>GET /orders
+                </button>
+            </div>
+            
+            <div id="api-status-check" class="mt-4 space-y-2">
+                <!-- Тут будуть результати перевірки -->
+            </div>
+            
+            <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 class="font-semibold text-gray-700 mb-2">Пояснення статусів:</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
+                        <span>200-299 - Успішно</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 bg-yellow-500 rounded-full mr-2"></span>
+                        <span>400-499 - Помилка клієнта</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 bg-red-500 rounded-full mr-2"></span>
+                        <span>500-599 - Помилка сервера</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-3 h-3 bg-blue-500 rounded-full mr-2"></span>
+                        <span>405 - Невірний метод (GET замість POST)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Інформація про API -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-amber-700 mb-4">📡 Інформація про API BookHub</h2>
+        
+        <div class="space-y-4">
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-2">Базовий URL API:</h3>
+                <div class="bg-gray-100 p-4 rounded block font-mono text-sm space-y-2">
+                    <div class="text-green-600 flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <div>
+                            <code>http://localhost:5000/api/v1</code>
+                            <div class="text-xs text-gray-500 mt-1">Локальний сервер</div>
+                        </div>
+                    </div>
+                    <div class="text-blue-600 flex items-center">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <div>
+                            <code>http://127.0.0.1:5000/api/v1</code>
+                            <div class="text-xs text-gray-500 mt-1">IPv4 адреса</div>
+                        </div>
+                    </div>
+                    <div class="text-gray-500 text-xs mt-2 p-2 bg-yellow-50 rounded">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Базовий URL <code>/api/v1</code> сам по собі не повертає даних - це тільки префікс для всіх endpoints.
+                        Спробуйте <code>/api/v1/books</code> для отримання списку книг.
+                    </div>
+                </div>
+            </div>
+            
+            <div>
+                <h3 class="font-semibold text-gray-700 mb-2">Основні ендпоінти:</h3>
+                <div class="space-y-2">
+                    <div class="flex items-center bg-gray-50 p-3 rounded border border-gray-200 hover:bg-gray-100 transition">
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs mr-3 font-bold">GET</span>
+                        <code class="font-mono text-sm flex-1">/books</code>
+                        <span class="text-gray-500 text-sm ml-2">Список книг</span>
+                        <button onclick="copyEndpoint('/api/v1/books')" class="ml-2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center bg-gray-50 p-3 rounded border border-gray-200 hover:bg-gray-100 transition">
+                        <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs mr-3 font-bold">POST</span>
+                        <code class="font-mono text-sm flex-1">/cart</code>
+                        <span class="text-gray-500 text-sm ml-2">Додати до кошика</span>
+                        <button onclick="copyEndpoint('/api/v1/cart')" class="ml-2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center bg-gray-50 p-3 rounded border border-gray-200 hover:bg-gray-100 transition">
+                        <span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs mr-3 font-bold">POST</span>
+                        <code class="font-mono text-sm flex-1">/reviews</code>
+                        <span class="text-gray-500 text-sm ml-2">Створити відгук</span>
+                        <button onclick="copyEndpoint('/api/v1/reviews')" class="ml-2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                    <div class="flex items-center bg-gray-50 p-3 rounded border border-gray-200 hover:bg-gray-100 transition">
+                        <span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs mr-3 font-bold">GET</span>
+                        <code class="font-mono text-sm flex-1">/search/books?q=</code>
+                        <span class="text-gray-500 text-sm ml-2">Пошук книг</span>
+                        <button onclick="copyEndpoint('/api/v1/search/books?q=')" class="ml-2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
+                <div class="flex items-start">
+                    <i class="fas fa-lightbulb text-amber-600 text-xl mr-3 mt-1"></i>
+                    <div>
+                        <h4 class="font-semibold text-amber-800 mb-1">Повна документація API</h4>
+                        <p class="text-sm text-amber-700">
+                            Інтерактивна документація Swagger UI доступна за посиланням: 
+                            <a href="/api/docs" class="font-bold hover:underline text-amber-900">
+                                Swagger UI документація
+                            </a>
+                        </p>
+                        <p class="text-amber-600 text-xs mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Для доступу до повної документації API потрібно бути авторизованим адміністратором
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Приклади коду з існуючих файлів -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <!-- Приклад коду з books.html -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-cart-plus mr-2 text-green-600"></i>Додавання до кошика (books.html)
+            </h2>
+            <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4 overflow-x-auto">
+                <pre><code class="text-sm">// Приклад з books.html
+async function addToCart(bookId) {
+    try {
+        const response = await fetch('/api/v1/cart', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ book_id: bookId, quantity: 1 })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            BookHub.showNotification('Книга додана до кошика!', 'success');
+            BookHub.updateCartCounter(data.total_items);
+        } else {
+            BookHub.showNotification(data.error, 'error');
+        }
+    } catch (error) {
+        BookHub.showNotification('Помилка мережі', 'error');
+    }
+}</code></pre>
+            </div>
+            <p class="text-gray-600 text-sm">
+                Цей код демонструє асинхронну відправку POST запиту до API кошика з обробкою відповіді та помилок.
+            </p>
+        </div>
+
+        <!-- Приклад коду з reviews.html -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-2xl font-bold mb-4 flex items-center">
+                <i class="fas fa-comment mr-2 text-purple-600"></i>Створення відгуку (reviews.html)
+            </h2>
+            <div class="bg-gray-900 text-gray-100 p-4 rounded-lg mb-4 overflow-x-auto">
+                <pre><code class="text-sm">// Приклад з reviews.html
+document.getElementById('review-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const reviewData = {
+        message: document.getElementById('review-message').value,
+        rating: parseInt(document.getElementById('review-rating').value)
+    };
+    
+    const response = await fetch('/api/v1/reviews', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(reviewData)
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+        BookHub.showNotification('Відгук надіслано!', 'success');
+        document.getElementById('review-form').reset();
+    }
+});</code></pre>
+            </div>
+            <p class="text-gray-600 text-sm">
+                Обробка форми відгуку з валідацією даних та відправкою через POST запит до API відгуків.
+            </p>
+        </div>
+    </div>
+
+    <!-- Інформація про обробку помилок -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 class="text-2xl font-bold text-amber-700 mb-4">⚠️ Обробка помилок у API</h2>
+        
+        <div class="space-y-4">
+            <div class="border-l-4 border-red-500 pl-4 py-2">
+                <h3 class="font-semibold text-red-700 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>HTTP 400 - Bad Request
+                </h3>
+                <p class="text-gray-600 text-sm">Неправильний запит (відсутні обов'язкові поля)</p>
+                <code class="text-xs bg-red-50 p-2 rounded block mt-1">{"success": false, "error": "Недостатньо даних"}</code>
+            </div>
+            
+            <div class="border-l-4 border-red-500 pl-4 py-2">
+                <h3 class="font-semibold text-red-700 flex items-center">
+                    <i class="fas fa-user-lock mr-2"></i>HTTP 401 - Unauthorized
+                </h3>
+                <p class="text-gray-600 text-sm">Користувач не авторизований</p>
+                <code class="text-xs bg-red-50 p-2 rounded block mt-1">{"success": false, "error": "Не авторизовано"}</code>
+            </div>
+            
+            <div class="border-l-4 border-red-500 pl-4 py-2">
+                <h3 class="font-semibold text-red-700 flex items-center">
+                    <i class="fas fa-search-minus mr-2"></i>HTTP 404 - Not Found
+                </h3>
+                <p class="text-gray-600 text-sm">Ресурс не знайдено (книга, користувач, замовлення)</p>
+                <code class="text-xs bg-red-50 p-2 rounded block mt-1">{"success": false, "error": "Книгу не знайдено"}</code>
+            </div>
+            
+            <div class="border-l-4 border-red-500 pl-4 py-2">
+                <h3 class="font-semibold text-red-700 flex items-center">
+                    <i class="fas fa-server mr-2"></i>HTTP 500 - Internal Server Error
+                </h3>
+                <p class="text-gray-600 text-sm">Внутрішня помилка сервера</p>
+                <code class="text-xs bg-red-50 p-2 rounded block mt-1">{"success": false, "error": "Внутрішня помилка сервера"}</code>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Додаткові стилі для демонстрації API */
+    #books-list::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    #books-list::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    #books-list::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+    
+    #search-test-result::-webkit-scrollbar {
+        width: 4px;
+    }
+    
+    .api-demo-card {
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
+    }
+    
+    .api-demo-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        border-color: #e5e7eb;
+    }
+    
+    pre code {
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        line-height: 1.4;
+    }
+    
+    #books-list .book-item {
+        transition: all 0.2s ease;
+    }
+    
+    #books-list .book-item:hover {
+        background-color: #f8fafc;
+        transform: scale(1.01);
+    }
+    
+    .endpoint-status {
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        transition: all 0.3s ease;
+    }
+    
+    .endpoint-status.checking {
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e40af;
+    }
+    
+    .endpoint-status.success {
+        background-color: #d1fae5;
+        border: 1px solid #a7f3d0;
+        color: #065f46;
+    }
+    
+    .endpoint-status.warning {
+        background-color: #fef3c7;
+        border: 1px solid #fde68a;
+        color: #92400e;
+    }
+    
+    .endpoint-status.error {
+        background-color: #fee2e2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+    
+    .endpoint-status.info {
+        background-color: #e0e7ff;
+        border: 1px solid #c7d2fe;
+        color: #3730a3;
+    }
+    
+    .endpoint-status:hover {
+        transform: translateX(4px);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+</style>
+
+<script>
+// Глобальні змінні для стану завантаження та даних
+let isLoadingBooks = false;
+let allBooksData = [];
+let booksLimit = 10;
+
+// ========== ПРАКТИЧНА ДЕМОНСТРАЦІЯ ==========
+
+// Змінити ліміт книг для відображення
+function changeBooksLimit() {
+    const select = document.getElementById('books-limit');
+    booksLimit = parseInt(select.value);
+    if (allBooksData && allBooksData.length > 0) {
+        displayBooks(allBooksData);
+    }
+}
+
+// Показати всі книги
+function showAllBooks() {
+    booksLimit = 0; // 0 означає всі книги
+    document.getElementById('books-limit').value = '0';
+    if (allBooksData && allBooksData.length > 0) {
+        displayBooks(allBooksData);
+    }
+}
+
+// Відображення книг з урахуванням ліміту
+function displayBooks(books) {
+    const booksList = document.getElementById('books-list');
+    const booksCount = document.getElementById('books-count');
+    
+    if (!books || !Array.isArray(books) || books.length === 0) {
+        booksList.innerHTML = `
+            <div class="text-center py-8">
+                <i class="fas fa-book text-3xl text-gray-300 mb-3"></i>
+                <p class="text-gray-500">Книг не знайдено</p>
+                <p class="text-gray-400 text-sm mt-1">API повернув порожній список або помилку</p>
+            </div>
+        `;
+        booksCount.textContent = 'Книги не знайдені';
+        return;
+    }
+    
+    const booksToShow = booksLimit > 0 ? books.slice(0, booksLimit) : books;
+    
+    booksCount.textContent = `Знайдено ${books.length} книг. Показано: ${booksToShow.length}`;
+    
+    let html = '';
+    
+    booksToShow.forEach((book, index) => {
+        const inStock = book.in_stock ? 'В наявності' : 'Немає в наявності';
+        const stockColor = book.in_stock ? 'text-green-600' : 'text-red-600';
+        const stockIcon = book.in_stock ? 'fa-check' : 'fa-times';
+        
+        html += `
+        <div class="book-item bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300">
+            <div class="flex justify-between items-start mb-2">
+                <div class="flex-1">
+                    <h4 class="font-bold text-gray-800 text-lg">${book.title}</h4>
+                    <p class="text-gray-600">${book.author}</p>
+                </div>
+                <span class="text-amber-700 font-bold text-xl ml-4">${book.price} ₴</span>
+            </div>
+            
+            ${book.description ? `<p class="text-gray-500 text-sm mt-2 mb-3 line-clamp-2">${book.description}</p>` : ''}
+            
+            <div class="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
+                <div class="flex items-center space-x-3">
+                    <span class="text-sm ${stockColor} font-medium">
+                        <i class="fas ${stockIcon} mr-1"></i>${inStock}
+                    </span>
+                    ${book.category ? `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${book.category}</span>` : ''}
+                    <span class="text-xs text-gray-500">ID: ${book.id}</span>
+                </div>
+                <div class="flex items-center">
+                    <span class="text-xs text-gray-500 mr-2">На складі: ${book.stock_quantity}</span>
+                    <span class="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">${index + 1}/${booksToShow.length}</span>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    
+    if (booksLimit > 0 && books.length > booksLimit) {
+        html += `
+            <div class="text-center mt-4 pt-4 border-t border-gray-200">
+                <p class="text-gray-500">
+                    ... та ще ${books.length - booksLimit} книг доступно в API
+                </p>
+                <button onclick="showAllBooks()" 
+                        class="mt-2 text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    <i class="fas fa-expand mr-1"></i>Показати всі книги
+                </button>
+            </div>
+        `;
+    }
+    
+    booksList.innerHTML = html;
+}
+
+// Практична функція для завантаження книг з API
+async function loadBooksFromAPI() {
+    if (isLoadingBooks) return;
+    
+    const booksList = document.getElementById('books-list');
+    isLoadingBooks = true;
+    
+    // Показуємо індикатор завантаження
+    booksList.innerHTML = `
+        <div class="text-center py-8">
+            <i class="fas fa-spinner fa-spin text-blue-600 text-2xl mb-3"></i>
+            <p class="text-blue-600 font-medium">Завантаження книг з API...</p>
+            <p class="text-gray-500 text-sm mt-1">Виконуємо запит: GET /api/v1/books</p>
+        </div>
+    `;
+    
+    try {
+        const response = await fetch('/api/v1/books');
+        
+        // Перевіряємо статус відповіді
+        if (!response.ok) {
+            throw new Error(`HTTP помилка! Статус: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            allBooksData = data.books || [];
+            displayBooks(allBooksData);
+            
+            // Використовуємо глобальну функцію для сповіщення
+            if (window.BookHub && window.BookHub.showNotification) {
+                BookHub.showNotification(`Завантажено ${allBooksData.length} книг з API`, 'success');
+            }
+        } else {
+            booksList.innerHTML = `
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle text-red-600 mr-3 text-xl"></i>
+                        <div>
+                            <p class="text-red-800 font-semibold">Помилка API</p>
+                            <p class="text-red-700 text-sm">${data.error || 'Невідома помилка'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        booksList.innerHTML = `
+            <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-600 mr-3 text-xl"></i>
+                    <div>
+                        <p class="text-red-800 font-semibold">Помилка завантаження</p>
+                        <p class="text-red-700 text-sm">${error.message}</p>
+                        <p class="text-red-600 text-xs mt-1">Перевірте, чи запущено сервер API</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    } finally {
+        isLoadingBooks = false;
+    }
+}
+
+// Обробник форми для додавання відгуку
+document.addEventListener('DOMContentLoaded', function() {
+    const reviewFormDemo = document.getElementById('review-form-demo');
+    if (reviewFormDemo) {
+        reviewFormDemo.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formResult = document.getElementById('form-result-demo');
+            const button = this.querySelector('button[type="submit"]');
+            const originalText = button.innerHTML;
+            
+            // Показуємо завантаження
+            button.disabled = true;
+            button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Відправка...';
+            formResult.innerHTML = '';
+            
+            // Збираємо дані з форми
+            const reviewData = {
+                name: document.getElementById('review-name-demo').value.trim(),
+                message: document.getElementById('review-message-demo').value.trim(),
+                rating: parseInt(document.getElementById('review-rating-demo').value),
+                book_id: null  // Для демонстрації не прив'язуємо до книги
+            };
+            
+            // Базова валідація
+            if (!reviewData.name || !reviewData.message) {
+                formResult.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                            <p class="text-red-700">Будь ласка, заповніть всі обов'язкові поля</p>
+                        </div>
+                    </div>
+                `;
+                button.disabled = false;
+                button.innerHTML = originalText;
+                return;
+            }
+            
+            if (reviewData.message.length < 5) {
+                formResult.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle text-red-500 mr-2"></i>
+                            <p class="text-red-700">Відгук має містити мінімум 5 символів</p>
+                        </div>
+                    </div>
+                `;
+                button.disabled = false;
+                button.innerHTML = originalText;
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/v1/reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(reviewData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP помилка! Статус: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Успіх - показуємо повідомлення та очищуємо форму
+                    formResult.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-2 text-xl"></i>
+                                <div>
+                                    <p class="text-green-800 font-semibold">✅ Відгук успішно надіслано!</p>
+                                    <p class="text-green-700 text-sm mt-1">Ваш відгук буде опублікований після перевірки модератором.</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Очищуємо форму (крім імені, яке readonly)
+                    clearReviewForm(true);
+                    
+                    // Через 5 секунд прибираємо повідомлення про успіх
+                    setTimeout(() => {
+                        if (formResult.innerHTML.includes('✅')) {
+                            formResult.innerHTML = '';
+                        }
+                    }, 5000);
+                    
+                    // Використовуємо глобальну функцію для сповіщення
+                    if (window.BookHub && window.BookHub.showNotification) {
+                        BookHub.showNotification('Відгук надіслано через API!', 'success');
+                    }
+                } else {
+                    // Помилка від API
+                    formResult.innerHTML = `
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                            <div class="flex items-center">
+                                <i class="fas fa-times-circle text-red-500 mr-2 text-xl"></i>
+                                <div>
+                                    <p class="text-red-800 font-semibold">Помилка API</p>
+                                    <p class="text-red-700 text-sm mt-1">${data.error || 'Невідома помилка при відправці відгуку'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if (window.BookHub && window.BookHub.showNotification) {
+                        BookHub.showNotification(`Помилка: ${data.error}`, 'error');
+                    }
+                }
+            } catch (error) {
+                // Мережева помилка
+                formResult.innerHTML = `
+                    <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class="fas fa-wifi text-red-500 mr-2 text-xl"></i>
+                            <div>
+                                <p class="text-red-800 font-semibold">Мережева помилка</p>
+                                <p class="text-red-700 text-sm mt-1">${error.message}</p>
+                                <p class="text-red-600 text-xs mt-2">Перевірте підключення до інтернету та сервер API</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                if (window.BookHub && window.BookHub.showNotification) {
+                    BookHub.showNotification('Мережева помилка. Перевірте підключення.', 'error');
+                }
+            } finally {
+                // Відновлюємо кнопку
+                button.disabled = false;
+                button.innerHTML = originalText;
+            }
+        });
+    }
+});
+
+// Функція для очищення форми відгуку (з можливістю збереження імені)
+function clearReviewForm(preserveName = false) {
+    // Очищаємо поле повідомлення та рейтинг
+    const messageField = document.getElementById('review-message-demo');
+    const ratingField = document.getElementById('review-rating-demo');
+    
+    if (messageField) messageField.value = '';
+    if (ratingField) ratingField.value = '3';
+    
+    // Очищаємо поле імені, тільки якщо воно не readonly і не потрібно зберігати
+    const nameField = document.getElementById('review-name-demo');
+    if (!preserveName && nameField && !nameField.readOnly) {
+        nameField.value = '';
+    }
+    
+    const formResult = document.getElementById('form-result-demo');
+    if (formResult) formResult.innerHTML = '';
+    
+    if (window.BookHub && window.BookHub.showNotification) {
+        BookHub.showNotification('Форму очищено', 'info');
+    }
+}
+
+// ========== ТЕСТУВАННЯ API ==========
+
+// Функція для тестування GET запиту
+async function testGetBooks() {
+    const resultDiv = document.getElementById('test-result');
+    resultDiv.innerHTML = '<div class="text-blue-600"><i class="fas fa-spinner fa-spin mr-2"></i>Виконуємо запит...</div>';
+    
+    try {
+        const startTime = Date.now();
+        const response = await fetch('/api/v1/books');
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        if (!response.ok) {
+            throw new Error(`HTTP помилка! Статус: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="text-green-600">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <strong>✅ Успішно!</strong>
+                </div>
+                <div class="mt-2 text-xs text-gray-600">
+                    <p><strong>Статус:</strong> ${response.status} ${response.statusText}</p>
+                    <p><strong>Кількість книг:</strong> ${data.count}</p>
+                    <p><strong>Час відповіді:</strong> ${responseTime}мс</p>
+                    <p><strong>Час:</strong> ${new Date().toLocaleTimeString()}</p>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="text-red-600">
+                    <i class="fas fa-times-circle mr-2"></i>
+                    <strong>Помилка API:</strong> ${data.error || 'Невідома помилка'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="text-red-600">
+                <i class="fas fa-times-circle mr-2"></i>
+                <strong>Мережева помилка:</strong> ${error.message}
+            </div>
+        `;
+    }
+}
+
+// Функція для тестування API кошика
+async function testCartAPI() {
+    const resultDiv = document.getElementById('cart-test-result');
+    resultDiv.innerHTML = '<div class="text-blue-600"><i class="fas fa-spinner fa-spin mr-2"></i>Тестуємо кошик...</div>';
+    
+    try {
+        const startTime = Date.now();
+        const response = await fetch('/api/v1/cart');
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        if (!response.ok) {
+            // Якщо 401 - користувач не авторизований, це нормально
+            if (response.status === 401) {
+                resultDiv.innerHTML = `
+                    <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                            <div>
+                                <p class="text-yellow-800 font-semibold">Потрібна авторизація</p>
+                                <p class="text-yellow-700 text-sm mt-1">Для доступу до кошика потрібно увійти</p>
+                                <p class="text-yellow-600 text-xs mt-1">Статус: ${response.status} (${response.statusText})</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            throw new Error(`HTTP помилка! Статус: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const itemCount = data.total_items || 0;
+            const uniqueItems = data.count || 0;
+            
+            resultDiv.innerHTML = `
+                <div class="text-green-600">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    <strong>✅ Кошик працює!</strong>
+                </div>
+                <div class="mt-2 text-xs text-gray-600">
+                    <p><strong>Товарів у кошику:</strong> ${itemCount}</p>
+                    <p><strong>Унікальних товарів:</strong> ${uniqueItems}</p>
+                    <p><strong>Загальна сума:</strong> ${data.total || 0} ₴</p>
+                    <p><strong>Час відповіді:</strong> ${responseTime}мс</p>
+                </div>
+            `;
+        } else {
+            resultDiv.innerHTML = `
+                <div class="text-yellow-600">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    <strong>Увага:</strong> ${data.error || 'Невідома помилка'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="text-red-600">
+                <i class="fas fa-times-circle mr-2"></i>
+                <strong>Помилка доступу до API:</strong> ${error.message}
+            </div>
+        `;
+    }
+}
+
+// Демонстраційна функція для пошуку книг
+async function searchBooksDemo() {
+    const searchInput = document.getElementById('search-demo-input').value.trim();
+    const resultDiv = document.getElementById('search-test-result');
+    
+    if (!searchInput) {
+        resultDiv.innerHTML = `
+            <div class="bg-yellow-50 border border-yellow-200 rounded p-3">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i>
+                    <p class="text-yellow-700">Введіть пошуковий запит</p>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    resultDiv.innerHTML = '<div class="text-blue-600"><i class="fas fa-spinner fa-spin mr-2"></i>Пошук...</div>';
+    
+    try {
+        const response = await fetch(`/api/v1/search/books?q=${encodeURIComponent(searchInput)}`);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP помилка! Статус: ${response.status} ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.count > 0) {
+                let booksHtml = `
+                    <div class="mb-3">
+                        <p class="text-green-600 font-semibold flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            Знайдено ${data.count} книг за запитом "<strong>${searchInput}</strong>":
+                        </p>
+                    </div>
+                `;
+                
+                data.books.forEach(book => {
+                    booksHtml += `
+                        <div class="flex justify-between items-center border-b border-gray-200 py-2 last:border-0">
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">${book.title}</p>
+                                <p class="text-xs text-gray-500">${book.author}</p>
+                            </div>
+                            <div class="flex items-center space-x-3 ml-4">
+                                <span class="text-amber-600 font-bold text-sm">${book.price} ₴</span>
+                                ${book.category ? `<span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">${book.category}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                resultDiv.innerHTML = booksHtml;
+            } else {
+                resultDiv.innerHTML = `
+                    <div class="text-center py-3">
+                        <i class="fas fa-search text-gray-400 text-lg mb-1"></i>
+                        <p class="text-gray-500">За запитом "<strong>${searchInput}</strong>" нічого не знайдено</p>
+                        <p class="text-gray-400 text-xs mt-1">Спробуйте інший запит</p>
+                    </div>
+                `;
+            }
+        } else {
+            resultDiv.innerHTML = `
+                <div class="text-red-600">
+                    <i class="fas fa-times-circle mr-1"></i>
+                    Помилка пошуку: ${data.error || 'Невідома помилка'}
+                </div>
+            `;
+        }
+    } catch (error) {
+        resultDiv.innerHTML = `
+            <div class="text-red-600">
+                <i class="fas fa-times-circle mr-1"></i>
+                Помилка: ${error.message}
+            </div>
+        `;
+    }
+}
+
+// ========== КОПІЮВАННЯ ТА ПЕРЕВІРКА API ==========
+
+// Копіювати endpoint в буфер обміну
+function copyEndpoint(endpoint) {
+    navigator.clipboard.writeText(endpoint).then(() => {
+        if (window.BookHub && window.BookHub.showNotification) {
+            BookHub.showNotification('Endpoint скопійовано в буфер обміну!', 'success');
+        }
+    }).catch(err => {
+        console.error('Помилка копіювання: ', err);
+    });
+}
+
+// Перевірити доступність endpoint з вказаним методом
+async function checkEndpoint(endpoint, method = 'GET') {
+    const statusDiv = document.getElementById('api-status-check');
+    
+    // Додаємо нову перевірку
+    const checkDiv = document.createElement('div');
+    checkDiv.className = 'endpoint-status checking';
+    checkDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i>
+            <div>
+                <strong>${method} ${endpoint}</strong>
+                <div class="text-xs text-gray-500">Перевіряємо...</div>
+            </div>
+        </div>
+    `;
+    statusDiv.prepend(checkDiv);
+    
+    try {
+        const startTime = Date.now();
+        const options = {
+            method: method,
+            headers: {
+                'Accept': 'application/json'
+            }
+        };
+        
+        const response = await fetch(endpoint, options);
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        // Визначаємо статус
+        let statusClass, statusIcon, statusText;
+        
+        if (response.status === 200 || response.status === 201) {
+            statusClass = 'success';
+            statusIcon = 'fa-check-circle';
+            statusText = '✅ Доступний';
+        } else if (response.status === 401 || response.status === 403) {
+            statusClass = 'warning';
+            statusIcon = 'fa-exclamation-triangle';
+            statusText = '🔒 Потрібна авторизація';
+        } else if (response.status === 404) {
+            statusClass = 'error';
+            statusIcon = 'fa-times-circle';
+            statusText = '❌ Не знайдено';
+        } else if (response.status === 405) {
+            statusClass = 'info';
+            statusIcon = 'fa-info-circle';
+            statusText = 'ℹ️ Невірний метод';
+        } else if (response.status >= 400 && response.status < 500) {
+            statusClass = 'warning';
+            statusIcon = 'fa-exclamation-triangle';
+            statusText = '⚠️ Помилка клієнта';
+        } else if (response.status >= 500) {
+            statusClass = 'error';
+            statusIcon = 'fa-server';
+            statusText = '💥 Помилка сервера';
+        } else {
+            statusClass = 'success';
+            statusIcon = 'fa-check-circle';
+            statusText = '✅ Доступний';
+        }
+        
+        checkDiv.className = `endpoint-status ${statusClass}`;
+        checkDiv.innerHTML = `
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <i class="fas ${statusIcon} mr-2"></i>
+                    <div>
+                        <strong>${method} ${endpoint}</strong>
+                        <div class="text-xs">${statusText} (${response.status})</div>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs text-gray-500">${responseTime}мс</span>
+                    <button onclick="copyEndpoint('${endpoint}')" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-copy text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        // Зберігаємо останні 10 перевірок
+        const checks = statusDiv.querySelectorAll('.endpoint-status');
+        if (checks.length > 10) {
+            checks[checks.length - 1].remove();
+        }
+        
+    } catch (error) {
+        checkDiv.className = 'endpoint-status error';
+        checkDiv.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-times-circle mr-2 text-red-500"></i>
+                <div>
+                    <strong>${method} ${endpoint}</strong>
+                    <div class="text-xs text-red-600">Мережева помилка: ${error.message}</div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Спеціальна функція для перевірки POST endpoint авторизації
+async function checkAuthEndpoint() {
+    const statusDiv = document.getElementById('api-status-check');
+    
+    const checkDiv = document.createElement('div');
+    checkDiv.className = 'endpoint-status checking';
+    checkDiv.innerHTML = `
+        <div class="flex items-center">
+            <i class="fas fa-spinner fa-spin mr-2 text-blue-500"></i>
+            <div>
+                <strong>POST /api/v1/auth/login</strong>
+                <div class="text-xs text-gray-500">Перевіряємо POST запит...</div>
+            </div>
+        </div>
+    `;
+    statusDiv.prepend(checkDiv);
+    
+    try {
+        const startTime = Date.now();
+        const response = await fetch('/api/v1/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({
+                username: 'testuser',
+                password: 'testpass',
+                remember: false
+            })
+        });
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        if (response.status === 200) {
+            checkDiv.className = 'endpoint-status success';
+            checkDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle mr-2 text-green-500"></i>
+                        <div>
+                            <strong>POST /api/v1/auth/login</strong>
+                            <div class="text-xs">✅ POST запит приймається (${response.status})</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500">${responseTime}мс</span>
+                        <button onclick="copyEndpoint('/api/v1/auth/login')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else if (response.status === 401) {
+            checkDiv.className = 'endpoint-status warning';
+            checkDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2 text-yellow-500"></i>
+                        <div>
+                            <strong>POST /api/v1/auth/login</strong>
+                            <div class="text-xs">🔒 Авторизація потрібна (${response.status})</div>
+                            <div class="text-xs text-gray-500">Endpoint працює, але потрібні вірні облікові дані</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500">${responseTime}мс</span>
+                        <button onclick="copyEndpoint('/api/v1/auth/login')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else if (response.status === 405) {
+            checkDiv.className = 'endpoint-status info';
+            checkDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                        <div>
+                            <strong>POST /api/v1/auth/login</strong>
+                            <div class="text-xs">ℹ️ Endpoint не приймає POST (${response.status})</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500">${responseTime}мс</span>
+                        <button onclick="copyEndpoint('/api/v1/auth/login')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            checkDiv.className = 'endpoint-status warning';
+            checkDiv.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center">
+                        <i class="fas fa-exclamation-circle mr-2 text-yellow-500"></i>
+                        <div>
+                            <strong>POST /api/v1/auth/login</strong>
+                            <div class="text-xs">⚠️ Статус: ${response.status}</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs text-gray-500">${responseTime}мс</span>
+                        <button onclick="copyEndpoint('/api/v1/auth/login')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-copy text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+    } catch (error) {
+        checkDiv.className = 'endpoint-status error';
+        checkDiv.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-times-circle mr-2 text-red-500"></i>
+                <div>
+                    <strong>POST /api/v1/auth/login</strong>
+                    <div class="text-xs text-red-600">Мережева помилка: ${error.message}</div>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// ========== ІНІЦІАЛІЗАЦІЯ ==========
+
+// Автоматично тестуємо API при завантаженні сторінки
+document.addEventListener('DOMContentLoaded', function() {
+    // Автоматично завантажуємо книги
+    setTimeout(() => {
+        loadBooksFromAPI();
+    }, 300);
+    
+    // Автоматично тестуємо GET запит
+    setTimeout(() => {
+        testGetBooks();
+    }, 800);
+    
+    // Перевіряємо основні endpoints
+    setTimeout(() => {
+        checkEndpoint('/api/v1/books', 'GET');
+        checkEndpoint('/api/v1/reviews', 'GET');
+        checkEndpoint('/api/v1/stats', 'GET');
+    }, 1200);
+});
+</script>
+{% endblock %}

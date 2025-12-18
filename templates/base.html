@@ -20,6 +20,9 @@
                 <a href="/about" class="hover:text-amber-200 px-3 py-2 rounded transition">Про нас</a>
                 <a href="/books" class="hover:text-amber-200 px-3 py-2 rounded transition">Книги</a>
                 <a href="/reviews" class="hover:text-amber-200 px-3 py-2 rounded transition">Відгуки</a>
+                <a href="/api-demo" class="hover:text-amber-200 px-3 py-2 rounded transition">
+                    <i class="fas fa-code mr-1"></i>Демо API
+                </a>
                 
                 <!-- Посилання на кошик з перевіркою авторизації -->
                 <a href="{% if current_user.is_authenticated %}{{ url_for('cart_page') }}{% else %}{{ url_for('auth.login', reason='cart') }}{% endif %}" 
@@ -45,12 +48,16 @@
                                 <i class="fas fa-user-circle mr-2"></i>Профіль
                             </a>
                             
+                            <a href="/api-demo" class="block px-4 py-2 hover:bg-amber-50">
+                                <i class="fas fa-code mr-2"></i>Демо API (Лаб. 6)
+                            </a>
+                            
                             {% if current_user.is_admin %}
                             <a href="/admin" class="block px-4 py-2 hover:bg-amber-50">
                                 <i class="fas fa-cog mr-2"></i>Адмін-панель
                             </a>
                             <a href="/api/docs" class="block px-4 py-2 hover:bg-amber-50">
-                                <i class="fas fa-code mr-2"></i>API Документація
+                                <i class="fas fa-book mr-2"></i>API Документація
                             </a>
                             {% endif %}
                             
@@ -118,21 +125,26 @@
                         <li><a href="/books" class="text-amber-200 hover:text-white">Книги</a></li>
                         <li><a href="/about" class="text-amber-200 hover:text-white">Про нас</a></li>
                         <li><a href="/reviews" class="text-amber-200 hover:text-white">Відгуки</a></li>
+                        <li><a href="/api-demo" class="text-amber-200 hover:text-white">Демо API (Лаб. 6)</a></li>
                         <li><a href="/api/docs" class="text-amber-200 hover:text-white">API Документація</a></li>
                     </ul>
                 </div>
                 
                 <div>
-                    <h4 class="font-bold mb-3">Контакти</h4>
+                    <h4 class="font-bold mb-3">Лабораторні роботи</h4>
                     <p class="text-amber-200">Команда "Ardoes"</p>
-                    <p class="text-amber-200">Лабораторна робота 5</p>
-                    <p class="text-amber-200">Розробка RESTful API</p>
+                    <p class="text-amber-200">Лабораторна робота 6</p>
+                    <p class="text-amber-200 text-sm mt-1">Інтеграція фронтенду з API</p>
                 </div>
             </div>
             
             <div class="border-t border-amber-700 mt-6 pt-6 text-center">
                 <p>&copy; 2025 BookHub | Команда "Ardoes". Всі права захищено.</p>
-                <p class="text-amber-300 text-sm mt-2">REST API версія 1.0 | Swagger документація доступна за адресою /api/docs</p>
+                <p class="text-amber-300 text-sm mt-2">
+                    REST API версія 1.0 | 
+                    <a href="/api-demo" class="hover:text-white underline">Демонстрація API (Лаб. 6)</a> | 
+                    <a href="/api/docs" class="hover:text-white underline">Swagger документація</a>
+                </p>
             </div>
         </div>
     </footer>
@@ -153,11 +165,7 @@
             }
             
             const notification = document.createElement('div');
-            notification.className = `p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
-                type === 'success' 
-                    ? 'bg-green-100 text-green-800 border border-green-200' 
-                    : 'bg-red-100 text-red-800 border border-red-200'
-            }`;
+            notification.className = `p-4 rounded-lg shadow-lg transform transition-all duration-300 ${type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-red-100 text-red-800 border border-red-200'}`;
             
             notification.innerHTML = `
                 <div class="flex items-center">
@@ -200,16 +208,31 @@
             }
         };
 
-        // Отримати поточний стан кошика при завантаженні сторінки
+        // Отримати поточний стан кошика при завантаженні сторінки (ТІЛЬКИ для авторизованих)
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('/api/v1/cart')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        BookHub.updateCartCounter(data.total_items || data.count || 0);
-                    }
-                })
-                .catch(error => console.error('Помилка при отриманні кошика:', error));
+            const isAuthenticated = {% if current_user.is_authenticated %}true{% else %}false{% endif %};
+            
+            if (isAuthenticated) {
+                fetch('/api/v1/cart')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            BookHub.updateCartCounter(data.total_items || data.count || 0);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Помилка при отриманні кошика:', error);
+                        // Якщо помилка 401, користувач не авторизований
+                        if (error.message.includes('401')) {
+                            console.log('Користувач не авторизований для доступу до кошика');
+                        }
+                    });
+            }
         });
 
         // Простий скрипт для випадаючого меню
