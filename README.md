@@ -1,9 +1,9 @@
 # Лабораторна робота 6: Інтеграція фронтенду з API та обробка помилок
 
-**Студент:** Дмитерчук Віталій Вадимович
-**Група:** ІПЗ-23
-**Команда:** "Ardoes"
-**Дата виконання:** Грудень 2025
+- **Студент:** Дмитерчук Віталій Вадимович
+- **Група:** ІПЗ-23
+- **Команда:** "Ardoes"
+- **Дата виконання:** Грудень 2025
 
 ## 📋 Опис проєкту
 BookHub - це веб-додаток для онлайн книжкового магазину з повною інтеграцією фронтенду з RESTful API. У цій лабораторній роботі реалізовано пряму взаємодію JavaScript клієнта з API сервером, що дозволяє виконувати CRUD операції без перезавантаження сторінки.
@@ -153,45 +153,45 @@ LAB3-4-FLASK-WEBAPP
 }
 ```
 
-📸 Скріншоти роботи додатку
+## 📸 Скріншоти роботи додатку
 Демонстраційна сторінка API:
---
+https://github.com/Armovolt/BookHub-online-store/blob/5ed9d49ac8f79a005cf13324cb417dd9e8d3ea5f/screenshots_lab06/01-api-demo-full.png
 
 Демонстраційна сторінка показує пряму інтеграцію JavaScript фронтенду з REST API
 
 
 Завантаження книг з API:
---
+https://github.com/Armovolt/BookHub-online-store/blob/5ed9d49ac8f79a005cf13324cb417dd9e8d3ea5f/screenshots_lab06/02-books-loading.png
 
 Книги завантажуються безпосередньо з API через JavaScript без перезавантаження сторінки
 
 
 Форма додавання відгуку:
---
+https://github.com/Armovolt/BookHub-online-store/blob/5ed9d49ac8f79a005cf13324cb417dd9e8d3ea5f/screenshots_lab06/03-review-form.png
 
 Форма для створення відгуків через POST запит до API
 
 
 Тестування доступності API:
---
+https://github.com/Armovolt/BookHub-online-store/blob/5ed9d49ac8f79a005cf13324cb417dd9e8d3ea5f/screenshots_lab06/04-api-testing.png
 
 Онлайн тестування різних endpoints API з відображенням HTTP статусів
 
 
 Обробка помилок авторизації:
---
+https://github.com/Armovolt/BookHub-online-store/blob/5ed9d49ac8f79a005cf13324cb417dd9e8d3ea5f/screenshots_lab06/05-auth-error.png
 
 Коректна обробка HTTP статусів 401 (Unauthorized) та 403 (Forbidden)
 
 
 Успішна відправка відгуку:
---
+https://github.com/Armovolt/BookHub-online-store/blob/5ed9d49ac8f79a005cf13324cb417dd9e8d3ea5f/screenshots_lab06/06-success-review.png
 
 Повідомлення про успішну відправку даних через API
 
 
 ## 🔗 Посилання
-- [Посилання на GitHub] --
+- [Посилання на GitHub](https://github.com/Armovolt/BookHub-online-store/tree/lab6-frontend)
 
 
 ## ✅ Висновки
