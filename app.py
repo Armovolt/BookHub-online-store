@@ -11,9 +11,19 @@ import secrets
 
 app = Flask(__name__)
 
-# Генерація безпечного секретного ключа
-app.config['SECRET_KEY'] = secrets.token_hex(32)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///bookhub.db'
+# ========== КОНФІГУРАЦІЯ ЗІ ЗМІННИХ СЕРЕДОВИЩА (ДЛЯ DOCKER) ==========
+
+# Отримуємо конфігурацію зі змінних середовища або використовуємо значення за замовчуванням
+SECRET_KEY = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+DATABASE_PATH = os.environ.get('DATABASE_PATH', 'bookhub.db')
+HOST = os.environ.get('HOST', '0.0.0.0')
+PORT = int(os.environ.get('PORT', 5000))
+DEBUG = os.environ.get('FLASK_ENV') == 'development'
+CORS_ORIGINS = os.environ.get('CORS_ORIGINS', 'http://localhost:5000,http://127.0.0.1:5000').split(',')
+
+# Налаштування Flask з використанням змінних середовища
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{DATABASE_PATH}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SESSION_PERMANENT'] = False
@@ -82,7 +92,7 @@ db.init_app(app)
 # Ініціалізація CORS для API
 CORS(app, resources={
     r"/api/*": {
-        "origins": ["http://localhost:5000", "http://127.0.0.1:5000"],
+        "origins": CORS_ORIGINS,
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Accept"],
         "supports_credentials": True
@@ -105,6 +115,40 @@ app.register_blueprint(auth_bp)
 
 # Ініціалізація Swagger
 swagger = Swagger(app)
+
+# ========== HEALTH CHECK ENDPOINT (ДЛЯ DOCKER) ==========
+@app.route('/health')
+def health_check():
+    """Health check endpoint для Docker"""
+    try:
+        # Перевіряємо підключення до бази даних
+        # Використовуємо text() для SQL запиту
+        from sqlalchemy import text
+        db.session.execute(text('SELECT 1'))
+        
+        # Додатково перевіряємо, чи є таблиці
+        table_count = db.session.execute(text(
+            "SELECT count(*) FROM sqlite_master WHERE type='table'"
+        )).scalar()
+        
+        return jsonify({
+            'status': 'healthy',
+            'service': 'BookHub API',
+            'database': 'connected',
+            'tables': table_count,
+            'timestamp': datetime.utcnow().isoformat(),
+            'version': '1.0.0',
+            'environment': os.environ.get('FLASK_ENV', 'production')
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'service': 'BookHub API',
+            'database': 'disconnected',
+            'error': str(e),
+            'timestamp': datetime.utcnow().isoformat(),
+            'environment': os.environ.get('FLASK_ENV', 'production')
+        }), 500
 
 # Функція для створення тестових даних
 def init_test_data():
@@ -220,7 +264,13 @@ def init_test_data():
 
 # Створення таблиць та тестових даних
 with app.app_context():
+    # Створюємо директорію для бази даних, якщо її немає
+    os.makedirs(os.path.dirname(DATABASE_PATH), exist_ok=True)
+    
+    # Створюємо таблиці
     db.create_all()
+    
+    # Ініціалізуємо тестові дані
     init_test_data()
 
 # ========== ОСНОВНІ МАРШРУТИ ==========
@@ -616,5 +666,30 @@ def internal_server_error(e):
 def make_session_permanent():
     session.permanent = True
 
+# ========== ІНФОРМАЦІЙНИЙ ENDPOINT ДЛЯ DOCKER ==========
+@app.route('/info')
+def info():
+    """Endpoint для інформації про конфігурацію"""
+    info_data = {
+        'service': 'BookHub API',
+        'version': '1.0.0',
+        'environment': os.environ.get('FLASK_ENV', 'production'),
+        'database_path': DATABASE_PATH,
+        'host': HOST,
+        'port': PORT,
+        'debug': DEBUG,
+        'cors_origins': CORS_ORIGINS,
+        'database_uri': app.config['SQLALCHEMY_DATABASE_URI'],
+        'timestamp': datetime.utcnow().isoformat()
+    }
+    return jsonify(info_data)
+
+# ========== ЗАПУСК СЕРВЕРА ==========
 if __name__ == '__main__':
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    print(f"Запуск BookHub на {HOST}:{PORT}")
+    print(f"База даних: {DATABASE_PATH}")
+    print(f"Режим відладки: {DEBUG}")
+    print(f"Довжина SECRET_KEY: {len(SECRET_KEY)}")
+    
+    # Запускаємо сервер з параметрами зі змінних середовища
+    app.run(host=HOST, port=PORT, debug=DEBUG)
